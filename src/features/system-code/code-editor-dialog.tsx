@@ -24,7 +24,7 @@ export const CodeEditorDialog = ({
     });
   };
 
-  const title = state.mode === "create" ? "Create Code" : "Edit Code";
+  const title = state.mode === "create" ? "공통코드 입력" : "공통코드 수정";
 
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={title}>
@@ -77,11 +77,9 @@ export const CodeEditorDialog = ({
           </label>
         </div>
         <footer className="modal-actions">
-          <button type="button" className="ghost" onClick={onCancel}>
-            Cancel
-          </button>
+          <button type="button" className="ghost" onClick={onCancel}>취소</button>
           <button type="button" onClick={() => void onSubmit()} disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save"}
+            {isSubmitting ? "저장 중..." : "저장"}
           </button>
         </footer>
       </div>

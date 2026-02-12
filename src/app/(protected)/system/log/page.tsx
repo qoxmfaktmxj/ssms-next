@@ -59,8 +59,8 @@ export default function SystemLogPage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>System Log</h2>
-          <p className="subtle">Phase 2 slice: operation log search and paging view.</p>
+          <h2>로그관리</h2>
+          <p className="subtle">로그 조회 및 페이징 화면입니다.</p>
         </div>
       </header>
 
@@ -75,9 +75,7 @@ export default function SystemLogPage() {
           value={filters.actionType}
           onChange={(event) => setFilters((prev) => ({ ...prev, actionType: event.target.value }))}
         />
-        <button type="button" className="ghost" onClick={applySearch} disabled={isLoading}>
-          Search
-        </button>
+        <button type="button" className="ghost" onClick={applySearch} disabled={isLoading}>조회</button>
       </div>
 
       <p className="status-text">{statusText}</p>

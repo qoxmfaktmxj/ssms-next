@@ -185,8 +185,8 @@ export default function SystemCodePage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>System Code</h2>
-          <p className="subtle">Phase 2 slice: common code search/create/update/delete.</p>
+          <h2>공통코드관리</h2>
+          <p className="subtle">공통코드 조회/입력/수정/삭제 화면입니다.</p>
         </div>
       </header>
 
@@ -206,19 +206,15 @@ export default function SystemCodePage() {
           value={filters.codeNm}
           onChange={(event) => setFilters((prev) => ({ ...prev, codeNm: event.target.value }))}
         />
-        <button type="button" className="ghost" onClick={onSearch} disabled={isLoading}>
-          Search
-        </button>
-        <button type="button" onClick={openCreate} disabled={isSubmitting}>
-          Create
-        </button>
+        <button type="button" className="ghost" onClick={onSearch} disabled={isLoading}>조회</button>
+        <button type="button" onClick={openCreate} disabled={isSubmitting}>입력</button>
         <button
           type="button"
           className="danger"
           onClick={() => void deleteRows(selectedRows)}
           disabled={selectedRows.length === 0 || isSubmitting}
         >
-          Delete Selected ({selectedRows.length})
+          선택삭제 ({selectedRows.length})
         </button>
         <button
           type="button"
@@ -233,7 +229,7 @@ export default function SystemCodePage() {
             }
           }}
         >
-          Refresh Cache
+          캐시새로고침
         </button>
       </div>
 

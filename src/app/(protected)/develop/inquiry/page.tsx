@@ -184,8 +184,8 @@ export default function DevelopInquiryPage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>Develop Inquiry</h2>
-          <p className="subtle">Phase 4 slice: inquiry list/search/create/update/delete.</p>
+          <h2>추가개발문의관리</h2>
+          <p className="subtle">추가개발 문의 조회/입력/수정/삭제 화면입니다.</p>
         </div>
       </header>
 
@@ -201,19 +201,15 @@ export default function DevelopInquiryPage() {
           className="ghost"
           onClick={() => setQuery({ keyword: keyword.trim(), inProceedCode: inProceedCode.trim() })}
           disabled={isLoading}
-        >
-          Search
-        </button>
-        <button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft() })}>
-          Create
-        </button>
+        >조회</button>
+        <button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft() })}>입력</button>
         <button
           type="button"
           className="danger"
           onClick={() => void deleteRows(selectedRows)}
           disabled={selectedRows.length === 0 || isSubmitting}
         >
-          Delete Selected ({selectedRows.length})
+          선택삭제 ({selectedRows.length})
         </button>
       </div>
 
@@ -260,12 +256,8 @@ export default function DevelopInquiryPage() {
                   <td>{row.confirmNm ?? row.confirmYn ?? "-"}</td>
                   <td>{row.projectNm ?? "-"}</td>
                   <td className="row-actions">
-                    <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>
-                      Edit
-                    </button>
-                    <button type="button" className="danger" onClick={() => void deleteRows([row])}>
-                      Delete
-                    </button>
+                    <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>수정</button>
+                    <button type="button" className="danger" onClick={() => void deleteRows([row])}>삭제</button>
                   </td>
                 </tr>
               );
@@ -285,7 +277,7 @@ export default function DevelopInquiryPage() {
         <div className="modal-backdrop">
           <div className="modal-card">
             <header className="modal-header">
-              <h3>{editor.mode === "create" ? "Create Inquiry" : "Edit Inquiry"}</h3>
+              <h3>{editor.mode === "create" ? "문의 입력" : "문의 수정"}</h3>
             </header>
             <div className="form-grid">
               <label>
@@ -490,12 +482,8 @@ export default function DevelopInquiryPage() {
               </label>
             </div>
             <div className="modal-actions">
-              <button type="button" className="ghost" onClick={() => setEditor(null)}>
-                Cancel
-              </button>
-              <button type="button" onClick={() => void save()} disabled={isSubmitting}>
-                Save
-              </button>
+              <button type="button" className="ghost" onClick={() => setEditor(null)}>취소</button>
+              <button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</button>
             </div>
           </div>
         </div>

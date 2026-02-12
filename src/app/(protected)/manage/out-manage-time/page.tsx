@@ -228,8 +228,8 @@ export default function ManageOutManageTimePage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>Out Manage Time</h2>
-          <p className="subtle">Phase 3 slice: summary/detail attendance usage management.</p>
+          <h2>외주인력근태관리</h2>
+          <p className="subtle">외주인력 근태 요약/상세 관리 화면입니다.</p>
         </div>
       </header>
 
@@ -240,9 +240,7 @@ export default function ManageOutManageTimePage() {
           onChange={(event) => setSearchYmd(event.target.value)}
         />
         <input placeholder="Search name" value={searchName} onChange={(event) => setSearchName(event.target.value)} />
-        <button type="button" className="ghost" onClick={() => void loadSummary()} disabled={isLoading}>
-          Search
-        </button>
+        <button type="button" className="ghost" onClick={() => void loadSummary()} disabled={isLoading}>조회</button>
         <button
           type="button"
           onClick={() => {
@@ -265,7 +263,7 @@ export default function ManageOutManageTimePage() {
           onClick={() => void deleteDetailRows(selectedDetailRows)}
           disabled={selectedDetailRows.length === 0 || isSubmitting}
         >
-          Delete Selected Detail ({selectedDetailRows.length})
+          선택삭제 ({selectedDetailRows.length})
         </button>
       </div>
 
@@ -354,12 +352,8 @@ export default function ManageOutManageTimePage() {
                 <td>{row.applyCnt ?? 0}</td>
                 <td>{row.note ?? "-"}</td>
                 <td className="row-actions">
-                  <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDetailDraft(row) })}>
-                    Edit
-                  </button>
-                  <button type="button" className="danger" onClick={() => void deleteDetailRows([row])}>
-                    Delete
-                  </button>
+                  <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDetailDraft(row) })}>수정</button>
+                  <button type="button" className="danger" onClick={() => void deleteDetailRows([row])}>삭제</button>
                 </td>
               </tr>
             ))}
@@ -378,7 +372,7 @@ export default function ManageOutManageTimePage() {
         <div className="modal-backdrop">
           <div className="modal-card">
             <header className="modal-header">
-              <h3>{editor.mode === "create" ? "Create Detail Row" : "Edit Detail Row"}</h3>
+              <h3>{editor.mode === "create" ? "상세 입력" : "상세 수정"}</h3>
             </header>
 
             <div className="form-grid">
@@ -488,12 +482,8 @@ export default function ManageOutManageTimePage() {
             </div>
 
             <div className="modal-actions">
-              <button type="button" className="ghost" onClick={() => setEditor(null)}>
-                Cancel
-              </button>
-              <button type="button" onClick={() => void saveDetail()} disabled={isSubmitting}>
-                Save
-              </button>
+              <button type="button" className="ghost" onClick={() => setEditor(null)}>취소</button>
+              <button type="button" onClick={() => void saveDetail()} disabled={isSubmitting}>저장</button>
             </div>
           </div>
         </div>

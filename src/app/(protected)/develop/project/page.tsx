@@ -198,8 +198,8 @@ export default function DevelopProjectPage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>Develop Project</h2>
-          <p className="subtle">Phase 4 slice: project list/search/create/update/delete.</p>
+          <h2>추가개발프로젝트관리</h2>
+          <p className="subtle">추가개발 프로젝트 조회/입력/수정/삭제 화면입니다.</p>
         </div>
       </header>
 
@@ -219,19 +219,15 @@ export default function DevelopProjectPage() {
           value={filters.endDate}
           onChange={(event) => setFilters((current) => ({ ...current, endDate: event.target.value }))}
         />
-        <button type="button" className="ghost" onClick={() => setQuery({ ...filters })} disabled={isLoading}>
-          Search
-        </button>
-        <button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft() })}>
-          Create
-        </button>
+        <button type="button" className="ghost" onClick={() => setQuery({ ...filters })} disabled={isLoading}>조회</button>
+        <button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft() })}>입력</button>
         <button
           type="button"
           className="danger"
           onClick={() => void deleteRows(selectedRows)}
           disabled={selectedRows.length === 0 || isSubmitting}
         >
-          Delete Selected ({selectedRows.length})
+          선택삭제 ({selectedRows.length})
         </button>
       </div>
 
@@ -282,12 +278,8 @@ export default function DevelopProjectPage() {
                   </td>
                   <td>{row.contractPrice ?? 0}</td>
                   <td className="row-actions">
-                    <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>
-                      Edit
-                    </button>
-                    <button type="button" className="danger" onClick={() => void deleteRows([row])}>
-                      Delete
-                    </button>
+                    <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>수정</button>
+                    <button type="button" className="danger" onClick={() => void deleteRows([row])}>삭제</button>
                   </td>
                 </tr>
               );
@@ -307,7 +299,7 @@ export default function DevelopProjectPage() {
         <div className="modal-backdrop">
           <div className="modal-card">
             <header className="modal-header">
-              <h3>{editor.mode === "create" ? "Create Project" : "Edit Project"}</h3>
+              <h3>{editor.mode === "create" ? "프로젝트 입력" : "프로젝트 수정"}</h3>
             </header>
             <div className="form-grid">
               <label>
@@ -478,12 +470,8 @@ export default function DevelopProjectPage() {
               </label>
             </div>
             <div className="modal-actions">
-              <button type="button" className="ghost" onClick={() => setEditor(null)}>
-                Cancel
-              </button>
-              <button type="button" onClick={() => void save()} disabled={isSubmitting}>
-                Save
-              </button>
+              <button type="button" className="ghost" onClick={() => setEditor(null)}>취소</button>
+              <button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</button>
             </div>
           </div>
         </div>

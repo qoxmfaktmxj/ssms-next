@@ -202,8 +202,8 @@ export default function SystemUserPage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>System User</h2>
-          <p className="subtle">Phase 2 slice: user list/search/create/update/delete/reset-password.</p>
+          <h2>사용자관리</h2>
+          <p className="subtle">사용자 조회/입력/수정/삭제/비밀번호초기화 화면입니다.</p>
         </div>
       </header>
 
@@ -227,12 +227,8 @@ export default function SystemUserPage() {
           <option value="manager">Manager</option>
           <option value="user">User</option>
         </select>
-        <button type="button" className="ghost" onClick={() => void applySearch()} disabled={isLoading}>
-          Search
-        </button>
-        <button type="button" onClick={openCreate} disabled={isSubmitting}>
-          Create
-        </button>
+        <button type="button" className="ghost" onClick={() => void applySearch()} disabled={isLoading}>조회</button>
+        <button type="button" onClick={openCreate} disabled={isSubmitting}>입력</button>
         <button
           type="button"
           className="danger"
@@ -241,7 +237,7 @@ export default function SystemUserPage() {
             void deleteUsers(selectedUsers.map((user) => ({ sabun: user.sabun, enterCd: user.enterCd })))
           }
         >
-          Delete Selected ({selectedCount})
+          선택삭제 ({selectedCount})
         </button>
       </div>
 

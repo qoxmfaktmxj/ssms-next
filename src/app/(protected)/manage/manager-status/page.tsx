@@ -42,8 +42,8 @@ export default function ManageManagerStatusPage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>Manager Status</h2>
-          <p className="subtle">Phase 3 slice: active manager-company mappings.</p>
+          <h2>유지보수통계</h2>
+          <p className="subtle">활성 유지보수 담당자-고객사 매핑 조회 화면입니다.</p>
         </div>
       </header>
 

@@ -185,8 +185,8 @@ export default function SystemMenuPage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>System Menu</h2>
-          <p className="subtle">Phase 2 slice: list/search/create/update/delete for menu configuration.</p>
+          <h2>메뉴관리</h2>
+          <p className="subtle">메뉴 조회/입력/수정/삭제 화면입니다.</p>
         </div>
       </header>
 
@@ -201,19 +201,15 @@ export default function SystemMenuPage() {
             }
           }}
         />
-        <button type="button" className="ghost" onClick={() => void handleSearch()} disabled={isLoading}>
-          Search
-        </button>
-        <button type="button" onClick={openCreate} disabled={isSubmitting}>
-          Create
-        </button>
+        <button type="button" className="ghost" onClick={() => void handleSearch()} disabled={isLoading}>조회</button>
+        <button type="button" onClick={openCreate} disabled={isSubmitting}>입력</button>
         <button
           type="button"
           className="danger"
           onClick={() => void deleteByIds([...selectedIds])}
           disabled={selectedCount === 0 || isSubmitting}
         >
-          Delete Selected ({selectedCount})
+          선택삭제 ({selectedCount})
         </button>
       </div>
 

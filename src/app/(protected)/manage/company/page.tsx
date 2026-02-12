@@ -190,8 +190,8 @@ export default function ManageCompanyPage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>Company</h2>
-          <p className="subtle">Phase 3 slice: company search/create/update/delete.</p>
+          <h2>고객사관리</h2>
+          <p className="subtle">고객사 조회/입력/수정/삭제 화면입니다.</p>
         </div>
       </header>
 
@@ -215,19 +215,15 @@ export default function ManageCompanyPage() {
             setQuery(keyword.trim());
           }}
           disabled={isLoading}
-        >
-          Search
-        </button>
-        <button type="button" onClick={openCreate} disabled={isSubmitting}>
-          Create
-        </button>
+        >조회</button>
+        <button type="button" onClick={openCreate} disabled={isSubmitting}>입력</button>
         <button
           type="button"
           className="danger"
           onClick={() => void deleteRows(selectedRows)}
           disabled={selectedRows.length === 0 || isSubmitting}
         >
-          Delete Selected ({selectedRows.length})
+          선택삭제 ({selectedRows.length})
         </button>
       </div>
 
@@ -274,12 +270,8 @@ export default function ManageCompanyPage() {
                   <td>{row.representCompany ?? "-"}</td>
                   <td>{formatYmd(row.sdate)}</td>
                   <td className="row-actions">
-                    <button type="button" className="ghost" onClick={() => openEdit(row)}>
-                      Edit
-                    </button>
-                    <button type="button" className="danger" onClick={() => void deleteRows([row])}>
-                      Delete
-                    </button>
+                    <button type="button" className="ghost" onClick={() => openEdit(row)}>수정</button>
+                    <button type="button" className="danger" onClick={() => void deleteRows([row])}>삭제</button>
                   </td>
                 </tr>
               );
@@ -321,7 +313,7 @@ export default function ManageCompanyPage() {
         <div className="modal-backdrop">
           <div className="modal-card">
             <header className="modal-header">
-              <h3>{editor.mode === "create" ? "Create Company" : "Edit Company"}</h3>
+              <h3>{editor.mode === "create" ? "고객사 입력" : "고객사 수정"}</h3>
             </header>
 
             <div className="form-grid">
@@ -538,12 +530,8 @@ export default function ManageCompanyPage() {
             </div>
 
             <div className="modal-actions">
-              <button type="button" className="ghost" onClick={() => setEditor(null)}>
-                Cancel
-              </button>
-              <button type="button" onClick={() => void save()} disabled={isSubmitting}>
-                Save
-              </button>
+              <button type="button" className="ghost" onClick={() => setEditor(null)}>취소</button>
+              <button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</button>
             </div>
           </div>
         </div>

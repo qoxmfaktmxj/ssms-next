@@ -74,8 +74,8 @@ export default function DevelopStaffPage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>Develop Staff</h2>
-          <p className="subtle">Phase 4 slice: staffing views (`list`, `list2`).</p>
+          <h2>추가개발인력관리</h2>
+          <p className="subtle">추가개발 인력 조회(목록1/목록2) 화면입니다.</p>
         </div>
       </header>
 
@@ -99,9 +99,7 @@ export default function DevelopStaffPage() {
             setQuery({ ...filters });
           }}
           disabled={isLoading}
-        >
-          Search
-        </button>
+        >조회</button>
       </div>
 
       <p className="status-text">{statusText}</p>

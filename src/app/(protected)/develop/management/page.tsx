@@ -265,8 +265,8 @@ export default function DevelopManagementPage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>Develop Management</h2>
-          <p className="subtle">Phase 4 slice: management list/list2 + CRUD.</p>
+          <h2>추가개발관리</h2>
+          <p className="subtle">추가개발 목록 1/2 및 CRUD 화면입니다.</p>
         </div>
       </header>
 
@@ -310,19 +310,15 @@ export default function DevelopManagementPage() {
             setQuery({ ...filters });
           }}
           disabled={isLoading}
-        >
-          Search
-        </button>
-        <button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft() })}>
-          Create
-        </button>
+        >조회</button>
+        <button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft() })}>입력</button>
         <button
           type="button"
           className="danger"
           onClick={() => void deleteRows(selectedRows)}
           disabled={selectedRows.length === 0 || isSubmitting}
         >
-          Delete Selected ({selectedRows.length})
+          선택삭제 ({selectedRows.length})
         </button>
       </div>
 
@@ -372,12 +368,8 @@ export default function DevelopManagementPage() {
                     {formatYm(row.startYm)} ~ {formatYm(row.endYm)}
                   </td>
                   <td className="row-actions">
-                    <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>
-                      Edit
-                    </button>
-                    <button type="button" className="danger" onClick={() => void deleteRows([row])}>
-                      Delete
-                    </button>
+                    <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>수정</button>
+                    <button type="button" className="danger" onClick={() => void deleteRows([row])}>삭제</button>
                   </td>
                 </tr>
               );
@@ -468,7 +460,7 @@ export default function DevelopManagementPage() {
         <div className="modal-backdrop">
           <div className="modal-card">
             <header className="modal-header">
-              <h3>{editor.mode === "create" ? "Create Management Row" : "Edit Management Row"}</h3>
+              <h3>{editor.mode === "create" ? "추가개발 입력" : "추가개발 수정"}</h3>
             </header>
             <div className="form-grid">
               <label>
@@ -649,12 +641,8 @@ export default function DevelopManagementPage() {
               </label>
             </div>
             <div className="modal-actions">
-              <button type="button" className="ghost" onClick={() => setEditor(null)}>
-                Cancel
-              </button>
-              <button type="button" onClick={() => void save()} disabled={isSubmitting}>
-                Save
-              </button>
+              <button type="button" className="ghost" onClick={() => setEditor(null)}>취소</button>
+              <button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</button>
             </div>
           </div>
         </div>

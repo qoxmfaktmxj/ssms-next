@@ -179,8 +179,8 @@ export default function SystemQuickMenuPage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>퀵System Menu</h2>
-          <p className="subtle">Phase 2 slice: candidate lookup and personal quick-menu ordering.</p>
+          <h2>퀵메뉴관리</h2>
+          <p className="subtle">후보 메뉴 조회와 개인 퀵메뉴 순서 관리 화면입니다.</p>
         </div>
       </header>
 
@@ -195,9 +195,7 @@ export default function SystemQuickMenuPage() {
             }
           }}
         />
-        <button type="button" className="ghost" onClick={applySearch} disabled={isLoading}>
-          Search
-        </button>
+        <button type="button" className="ghost" onClick={applySearch} disabled={isLoading}>조회</button>
         <button type="button" className="ghost" onClick={addSelectedCandidate} disabled={isSaving}>
           Add Selected
         </button>
@@ -207,9 +205,7 @@ export default function SystemQuickMenuPage() {
         <button type="button" className="ghost" onClick={() => moveSelected(1)} disabled={isSaving}>
           Move Down
         </button>
-        <button type="button" onClick={() => void saveQuickMenus()} disabled={isSaving}>
-          Save
-        </button>
+        <button type="button" onClick={() => void saveQuickMenus()} disabled={isSaving}>저장</button>
         <button type="button" className="danger" onClick={() => void clearQuickMenus()} disabled={isSaving}>
           Clear All
         </button>

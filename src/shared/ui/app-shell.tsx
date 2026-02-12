@@ -35,8 +35,9 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
           </div>
           <nav className="header-actions">
             <Link href="/dashboard">대시보드</Link>
-            <button type="button" onClick={handleLogout}>
-              로그아웃
+            <button type="button" className="logout-button" onClick={handleLogout}>
+              <span aria-hidden="true">⎋</span>
+              <span>로그아웃</span>
             </button>
           </nav>
         </header>

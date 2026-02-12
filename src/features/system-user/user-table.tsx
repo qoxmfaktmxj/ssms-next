@@ -72,14 +72,10 @@ export const UserTable = ({
                   <span className={row.useYn === "Y" ? "badge green" : "badge red"}>{row.useYn}</span>
                 </td>
                 <td className="row-actions">
-                  <button type="button" className="ghost" onClick={() => onEdit(row)}>
-                    Edit
-                  </button>
-                  <button type="button" className="danger" onClick={() => onDelete(row)}>
-                    Delete
-                  </button>
+                  <button type="button" className="ghost" onClick={() => onEdit(row)}>수정</button>
+                  <button type="button" className="danger" onClick={() => onDelete(row)}>삭제</button>
                   <button type="button" className="ghost" onClick={() => onResetPassword(row)}>
-                    Reset PW
+                    비밀번호초기화
                   </button>
                 </td>
               </tr>

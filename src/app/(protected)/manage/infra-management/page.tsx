@@ -289,8 +289,8 @@ export default function ManageInfraManagementPage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>Infra Management</h2>
-          <p className="subtle">Phase 3 slice: infra summary/master/section management.</p>
+          <h2>인프라구성관리</h2>
+          <p className="subtle">인프라 요약/마스터/섹션 관리 화면입니다.</p>
         </div>
       </header>
 
@@ -310,14 +310,12 @@ export default function ManageInfraManagementPage() {
             </option>
           ))}
         </select>
-        <button type="button" className="ghost" onClick={() => setQuery({ ...filters })} disabled={isLoading}>
-          Search
-        </button>
+        <button type="button" className="ghost" onClick={() => setQuery({ ...filters })} disabled={isLoading}>조회</button>
         <button type="button" onClick={() => setEditor({ draft: emptyMasterDraft() })}>
-          Create Mapping
+          매핑입력
         </button>
         <button type="button" className="danger" onClick={() => void deleteSelectedMaster()} disabled={selectedRows.length === 0}>
-          Delete Selected ({selectedRows.length})
+          선택삭제 ({selectedRows.length})
         </button>
       </div>
 
@@ -385,7 +383,7 @@ export default function ManageInfraManagementPage() {
           <option value="2">Production</option>
         </select>
         <button type="button" className="danger" onClick={() => void deleteCurrentMapping()} disabled={!selectedSummary}>
-          Delete Current Mapping
+          현재매핑삭제
         </button>
       </div>
 
@@ -517,7 +515,7 @@ export default function ManageInfraManagementPage() {
         <div className="modal-backdrop">
           <div className="modal-card">
             <header className="modal-header">
-              <h3>Create Infra Mapping</h3>
+              <h3>인프라 매핑 입력</h3>
             </header>
 
             <div className="form-grid">
@@ -621,12 +619,8 @@ export default function ManageInfraManagementPage() {
             </div>
 
             <div className="modal-actions">
-              <button type="button" className="ghost" onClick={() => setEditor(null)}>
-                Cancel
-              </button>
-              <button type="button" onClick={() => void saveMaster()} disabled={isSubmitting}>
-                Save
-              </button>
+              <button type="button" className="ghost" onClick={() => setEditor(null)}>취소</button>
+              <button type="button" onClick={() => void saveMaster()} disabled={isSubmitting}>저장</button>
             </div>
           </div>
         </div>

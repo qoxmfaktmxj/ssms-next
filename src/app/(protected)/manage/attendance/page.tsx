@@ -201,8 +201,8 @@ export default function ManageAttendancePage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>Attendance</h2>
-          <p className="subtle">Phase 3 slice: attendance list/create/update/delete.</p>
+          <h2>외주인력일정관리</h2>
+          <p className="subtle">외주인력 일정 조회/입력/수정/삭제 화면입니다.</p>
         </div>
       </header>
 
@@ -215,16 +215,14 @@ export default function ManageAttendancePage() {
         <button type="button" className="ghost" onClick={() => void load()} disabled={isLoading}>
           Refresh
         </button>
-        <button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft(user?.sabun ?? "") })}>
-          Create
-        </button>
+        <button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft(user?.sabun ?? "") })}>입력</button>
         <button
           type="button"
           className="danger"
           onClick={() => void deleteRows(selectedRows)}
           disabled={selectedRows.length === 0 || isSubmitting}
         >
-          Delete Selected ({selectedRows.length})
+          선택삭제 ({selectedRows.length})
         </button>
       </div>
 
@@ -273,12 +271,8 @@ export default function ManageAttendancePage() {
                 <td>{row.orgNm ?? "-"}</td>
                 <td>{row.note ?? "-"}</td>
                 <td className="row-actions">
-                  <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>
-                    Edit
-                  </button>
-                  <button type="button" className="danger" onClick={() => void deleteRows([row])}>
-                    Delete
-                  </button>
+                  <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>수정</button>
+                  <button type="button" className="danger" onClick={() => void deleteRows([row])}>삭제</button>
                 </td>
               </tr>
             ))}
@@ -297,7 +291,7 @@ export default function ManageAttendancePage() {
         <div className="modal-backdrop">
           <div className="modal-card">
             <header className="modal-header">
-              <h3>{editor.mode === "create" ? "Create Attendance" : "Edit Attendance"}</h3>
+              <h3>{editor.mode === "create" ? "일정 입력" : "일정 수정"}</h3>
             </header>
 
             <div className="form-grid">
@@ -430,12 +424,8 @@ export default function ManageAttendancePage() {
             </div>
 
             <div className="modal-actions">
-              <button type="button" className="ghost" onClick={() => setEditor(null)}>
-                Cancel
-              </button>
-              <button type="button" onClick={() => void save()} disabled={isSubmitting}>
-                Save
-              </button>
+              <button type="button" className="ghost" onClick={() => setEditor(null)}>취소</button>
+              <button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</button>
             </div>
           </div>
         </div>
