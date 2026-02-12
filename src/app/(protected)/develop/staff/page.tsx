@@ -1,6 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { developStaffApi } from "@/features/develop-staff/api";
 import type { DevelopStaff } from "@/features/develop-staff/types";
 
@@ -30,7 +33,7 @@ export default function DevelopStaffPage() {
   const [rows, setRows] = useState<DevelopStaff[]>([]);
   const [rows2, setRows2] = useState<DevelopStaff[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [statusText, setStatusText] = useState("Load staff data to begin.");
+  const [statusText, setStatusText] = useState("인력 데이터를 불러오세요.");
   const [page, setPage] = useState(0);
   const [page2, setPage2] = useState(0);
   const [size] = useState(20);
@@ -44,7 +47,7 @@ export default function DevelopStaffPage() {
   const loadRows = useCallback(
     async (nextPage: number, nextPage2: number, nextQuery: { startDate: string; endDate: string }) => {
       setIsLoading(true);
-      setStatusText("Loading staff lists...");
+      setStatusText("인력 목록 조회 중...");
       try {
         const common = { startDate: nextQuery.startDate, endDate: nextQuery.endDate };
         const [response, response2] = await Promise.all([
@@ -55,9 +58,9 @@ export default function DevelopStaffPage() {
         setRows2(response2.content ?? []);
         setTotalElements(response.totalElements ?? 0);
         setTotalElements2(response2.totalElements ?? 0);
-        setStatusText(`Loaded table1=${response.content?.length ?? 0}, table2=${response2.content?.length ?? 0}.`);
+        setStatusText(`목록1 ${response.content?.length ?? 0}건, 목록2 ${response2.content?.length ?? 0}건 조회되었습니다.`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load staff lists.";
+        const message = error instanceof Error ? error.message : "인력 목록 조회에 실패했습니다.";
         setStatusText(message);
       } finally {
         setIsLoading(false);
@@ -74,140 +77,140 @@ export default function DevelopStaffPage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>추가개발인력관리</h2>
+          <h2>추가개발 인력 관리</h2>
           <p className="subtle">추가개발 인력 조회(목록1/목록2) 화면입니다.</p>
         </div>
       </header>
 
-      <div className="toolbar">
-        <input
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <Input
           placeholder="Start YM (YYYYMM)"
           value={filters.startDate}
           onChange={(event) => setFilters((current) => ({ ...current, startDate: event.target.value }))}
+          className="w-40"
         />
-        <input
+        <Input
           placeholder="End YM (YYYYMM)"
           value={filters.endDate}
           onChange={(event) => setFilters((current) => ({ ...current, endDate: event.target.value }))}
+          className="w-40"
         />
-        <button
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
           onClick={() => {
             setPage(0);
             setPage2(0);
             setQuery({ ...filters });
           }}
           disabled={isLoading}
-        >조회</button>
+        >
+          조회
+        </Button>
       </div>
 
       <p className="status-text">{statusText}</p>
 
-      <h3>Staff List 1</h3>
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Company</th>
-              <th>Project</th>
-              <th>Part</th>
-              <th>Input Man Power</th>
-              <th>Develop Period</th>
-              <th>Contract Price</th>
-            </tr>
-          </thead>
-          <tbody>
+      <h3>인력 목록 1</h3>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead>고객사</TableHead>
+              <TableHead>프로젝트</TableHead>
+              <TableHead>분류</TableHead>
+              <TableHead>투입 인력</TableHead>
+              <TableHead>개발 기간</TableHead>
+              <TableHead>계약 금액</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.map((row, index) => (
-              <tr key={`${row.requestCompanyCd}:${row.projectNm ?? "project"}:${index}`}>
-                <td>{row.requestCompanyNm ?? row.requestCompanyCd}</td>
-                <td>{row.projectNm ?? "-"}</td>
-                <td>{row.partNm ?? row.partCd ?? "-"}</td>
-                <td>{row.inputManPower ?? "-"}</td>
-                <td>
+              <TableRow key={`${row.requestCompanyCd}:${row.projectNm ?? "project"}:${index}`}>
+                <TableCell>{row.requestCompanyNm ?? row.requestCompanyCd}</TableCell>
+                <TableCell>{row.projectNm ?? "-"}</TableCell>
+                <TableCell>{row.partNm ?? row.partCd ?? "-"}</TableCell>
+                <TableCell>{row.inputManPower ?? "-"}</TableCell>
+                <TableCell>
                   {formatYmd(row.developStdDt)} ~ {formatYmd(row.developEndDt)}
-                </td>
-                <td>{row.contractPrice ?? 0}</td>
-              </tr>
+                </TableCell>
+                <TableCell>{row.contractPrice ?? 0}</TableCell>
+              </TableRow>
             ))}
             {!isLoading && rows.length === 0 && (
-              <tr>
-                <td colSpan={6} className="empty-row">
-                  No staff rows found.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={6} className="py-8 text-center text-slate-500">
+                  조회된 인력 데이터가 없습니다.
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       <div className="pagination">
-        <button type="button" className="ghost" onClick={() => setPage((current) => Math.max(current - 1, 0))} disabled={page === 0 || isLoading}>
-          Prev
-        </button>
+        <Button type="button" variant="outline" size="sm" onClick={() => setPage((current) => Math.max(current - 1, 0))} disabled={page === 0 || isLoading}>이전</Button>
         <span>
-          Page {page + 1} / {totalPages}
+          페이지 {page + 1} / {totalPages}
         </span>
-        <button
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
+          size="sm"
           onClick={() => setPage((current) => Math.min(current + 1, totalPages - 1))}
           disabled={page >= totalPages - 1 || isLoading}
-        >
-          Next
-        </button>
+        >다음</Button>
       </div>
 
-      <h3>Staff List 2</h3>
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Company</th>
-              <th>Project/Request</th>
-              <th>Part</th>
-              <th>Status</th>
-              <th>Month Period</th>
-            </tr>
-          </thead>
-          <tbody>
+      <h3>인력 목록 2</h3>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead>고객사</TableHead>
+              <TableHead>프로젝트/요청</TableHead>
+              <TableHead>분류</TableHead>
+              <TableHead>상태</TableHead>
+              <TableHead>월 기간</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows2.map((row, index) => (
-              <tr key={`${row.requestCompanyCd}:${row.projectNm ?? "request"}:${index}:list2`}>
-                <td>{row.requestCompanyNm ?? row.requestCompanyCd}</td>
-                <td>{row.projectNm ?? "-"}</td>
-                <td>{row.partNm ?? row.partCd ?? "-"}</td>
-                <td>{row.inspectionYn ?? "-"}</td>
-                <td>
+              <TableRow key={`${row.requestCompanyCd}:${row.projectNm ?? "request"}:${index}:list2`}>
+                <TableCell>{row.requestCompanyNm ?? row.requestCompanyCd}</TableCell>
+                <TableCell>{row.projectNm ?? "-"}</TableCell>
+                <TableCell>{row.partNm ?? row.partCd ?? "-"}</TableCell>
+                <TableCell>{row.inspectionYn ?? "-"}</TableCell>
+                <TableCell>
                   {formatYm(row.startYm)} ~ {formatYm(row.endYm)}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
             {!isLoading && rows2.length === 0 && (
-              <tr>
-                <td colSpan={5} className="empty-row">
-                  No staff list2 rows found.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={5} className="py-8 text-center text-slate-500">
+                  조회된 인력 데이터(목록2)가 없습니다.
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       <div className="pagination">
-        <button type="button" className="ghost" onClick={() => setPage2((current) => Math.max(current - 1, 0))} disabled={page2 === 0 || isLoading}>
-          Prev
-        </button>
+        <Button type="button" variant="outline" size="sm" onClick={() => setPage2((current) => Math.max(current - 1, 0))} disabled={page2 === 0 || isLoading}>이전</Button>
         <span>
-          Page {page2 + 1} / {totalPages2}
+          페이지 {page2 + 1} / {totalPages2}
         </span>
-        <button
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
+          size="sm"
           onClick={() => setPage2((current) => Math.min(current + 1, totalPages2 - 1))}
           disabled={page2 >= totalPages2 - 1 || isLoading}
-        >
-          Next
-        </button>
+        >다음</Button>
       </div>
     </section>
   );
 }
+
+
 

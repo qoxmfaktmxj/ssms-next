@@ -1,4 +1,4 @@
-type LegacyPlaceholderPageProps = {
+﻿type LegacyPlaceholderPageProps = {
   params: Promise<{ slug: string[] }>;
 };
 
@@ -8,18 +8,19 @@ export default async function LegacyPlaceholderPage({ params }: LegacyPlaceholde
 
   return (
     <section className="panel">
-      <h2>Legacy Route Placeholder</h2>
-      <p>This menu path exists in the legacy Vue app and is not migrated yet.</p>
+      <h2>레거시 경로 안내</h2>
+      <p>이 메뉴 경로는 레거시 Vue 앱에 존재하며 아직 마이그레이션되지 않았습니다.</p>
       <dl className="kv-grid single">
         <div>
-          <dt>Legacy route</dt>
+          <dt>레거시 경로</dt>
           <dd>{legacyPath}</dd>
         </div>
       </dl>
       <p className="subtle">
-        Track this screen in the migration backlog and replace this placeholder with an actual Next.js
-        page during the domain slice implementation.
+        마이그레이션 백로그에서 이 화면을 추적하고 실제 Next.js
+        페이지로 교체하세요.
       </p>
     </section>
   );
 }
+

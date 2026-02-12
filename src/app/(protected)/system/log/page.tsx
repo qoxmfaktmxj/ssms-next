@@ -1,6 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { systemLogApi } from "@/features/system-log/api";
 import { LogTable } from "@/features/system-log/log-table";
 import type { SystemLogRecord } from "@/features/system-log/types";
@@ -15,7 +17,7 @@ export default function SystemLogPage() {
   const [query, setQuery] = useState<LogFilterState>({ sabun: "", actionType: "" });
   const [rows, setRows] = useState<SystemLogRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [statusText, setStatusText] = useState("Load system logs to begin.");
+  const [statusText, setStatusText] = useState("로그를 불러오세요.");
   const [page, setPage] = useState(0);
   const [size] = useState(25);
   const [totalElements, setTotalElements] = useState(0);
@@ -25,7 +27,7 @@ export default function SystemLogPage() {
   const loadLogs = useCallback(
     async (nextPage: number, appliedFilters: LogFilterState) => {
       setIsLoading(true);
-      setStatusText("Loading logs...");
+      setStatusText("로그 조회 중...");
       try {
         const response = await systemLogApi.list({
           page: nextPage,
@@ -35,9 +37,9 @@ export default function SystemLogPage() {
         });
         setRows(response.content ?? []);
         setTotalElements(response.totalElements ?? 0);
-        setStatusText(`Loaded ${response.content?.length ?? 0} rows.`);
+        setStatusText(`${response.content?.length ?? 0}건 조회되었습니다.`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load logs.";
+        const message = error instanceof Error ? error.message : "로그 조회에 실패했습니다.";
         setStatusText(message);
       } finally {
         setIsLoading(false);
@@ -64,18 +66,22 @@ export default function SystemLogPage() {
         </div>
       </header>
 
-      <div className="toolbar">
-        <input
-          placeholder="Sabun"
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <Input
+          placeholder="사번"
           value={filters.sabun}
           onChange={(event) => setFilters((prev) => ({ ...prev, sabun: event.target.value }))}
+          className="w-40"
         />
-        <input
-          placeholder="Action type"
+        <Input
+          placeholder="액션 타입"
           value={filters.actionType}
           onChange={(event) => setFilters((prev) => ({ ...prev, actionType: event.target.value }))}
+          className="w-44"
         />
-        <button type="button" className="ghost" onClick={applySearch} disabled={isLoading}>조회</button>
+        <Button type="button" variant="outline" onClick={applySearch} disabled={isLoading}>
+          조회
+        </Button>
       </div>
 
       <p className="status-text">{statusText}</p>
@@ -83,35 +89,32 @@ export default function SystemLogPage() {
       <LogTable rows={rows} />
 
       <div className="pagination">
-        <button
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
           onClick={() => {
             const nextPage = Math.max(page - 1, 0);
             setPage(nextPage);
             void loadLogs(nextPage, query);
           }}
           disabled={page === 0 || isLoading}
-        >
-          Prev
-        </button>
+        >이전</Button>
         <span>
-          Page {page + 1} / {totalPages}
+          페이지 {page + 1} / {totalPages}
         </span>
-        <button
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
           onClick={() => {
             const nextPage = Math.min(page + 1, totalPages - 1);
             setPage(nextPage);
             void loadLogs(nextPage, query);
           }}
           disabled={page >= totalPages - 1 || isLoading}
-        >
-          Next
-        </button>
+        >다음</Button>
       </div>
     </section>
   );
 }
+
 

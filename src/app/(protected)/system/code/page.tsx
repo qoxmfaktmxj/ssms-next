@@ -1,6 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { CodeEditorDialog } from "@/features/system-code/code-editor-dialog";
 import { CodeTable } from "@/features/system-code/code-table";
 import { systemCodeApi } from "@/features/system-code/api";
@@ -52,21 +54,18 @@ export default function SystemCodePage() {
   const [editor, setEditor] = useState<CodeEditorState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusText, setStatusText] = useState("Load code data to begin.");
+  const [statusText, setStatusText] = useState("코드 데이터를 불러오세요.");
   const [page, setPage] = useState(0);
   const [size] = useState(20);
   const [totalElements, setTotalElements] = useState(0);
 
-  const selectedRows = useMemo(
-    () => rows.filter((row) => selectedKeys.has(rowKey(row))),
-    [rows, selectedKeys],
-  );
+  const selectedRows = useMemo(() => rows.filter((row) => selectedKeys.has(rowKey(row))), [rows, selectedKeys]);
   const totalPages = useMemo(() => Math.max(Math.ceil(totalElements / size), 1), [size, totalElements]);
 
   const loadCodes = useCallback(
     async (nextPage: number, appliedFilters: CodeFilters) => {
       setIsLoading(true);
-      setStatusText("Loading code list...");
+      setStatusText("코드 목록 조회 중...");
       try {
         const response = await systemCodeApi.search({
           page: nextPage,
@@ -78,9 +77,9 @@ export default function SystemCodePage() {
         setRows(response.content ?? []);
         setTotalElements(response.totalElements ?? 0);
         setSelectedKeys(new Set());
-        setStatusText(`Loaded ${response.content?.length ?? 0} rows.`);
+        setStatusText(`${response.content?.length ?? 0}건 조회되었습니다.`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load code list.";
+        const message = error instanceof Error ? error.message : "코드 목록 조회에 실패했습니다.";
         setStatusText(message);
       } finally {
         setIsLoading(false);
@@ -107,10 +106,10 @@ export default function SystemCodePage() {
   };
 
   const validateDraft = (draft: CodeDraft): string | null => {
-    if (!draft.grcodeCd.trim()) return "Group code is required.";
-    if (!draft.code.trim()) return "Code is required.";
-    if (!draft.codeNm.trim()) return "Code name is required.";
-    if (draft.seq.trim() && Number.isNaN(Number(draft.seq))) return "Sequence must be numeric.";
+    if (!draft.grcodeCd.trim()) return "그룹 코드는 필수입니다.";
+    if (!draft.code.trim()) return "코드는 필수입니다.";
+    if (!draft.codeNm.trim()) return "코드명은 필수입니다.";
+    if (draft.seq.trim() && Number.isNaN(Number(draft.seq))) return "정렬 순서는 숫자여야 합니다.";
     return null;
   };
 
@@ -123,7 +122,7 @@ export default function SystemCodePage() {
     }
 
     setIsSubmitting(true);
-    setStatusText(editor.mode === "create" ? "Creating code..." : "Updating code...");
+    setStatusText(editor.mode === "create" ? "코드 등록 중..." : "코드 수정 중...");
     try {
       if (editor.mode === "create") {
         await systemCodeApi.create(editor.draft);
@@ -133,7 +132,7 @@ export default function SystemCodePage() {
       setEditor(null);
       await loadCodes(page, query);
     } catch (error) {
-      const failMessage = error instanceof Error ? error.message : "Save에 실패했습니다.";
+      const failMessage = error instanceof Error ? error.message : "저장에 실패했습니다.";
       setStatusText(failMessage);
     } finally {
       setIsSubmitting(false);
@@ -142,22 +141,20 @@ export default function SystemCodePage() {
 
   const deleteRows = async (targetRows: SystemCode[]) => {
     if (targetRows.length === 0) {
-      setStatusText("Select at least one code row.");
+      setStatusText("삭제할 코드를 선택하세요.");
       return;
     }
-    const confirmed = window.confirm(`Delete ${targetRows.length} code row(s)?`);
+    const confirmed = window.confirm(`${targetRows.length}건의 코드를 삭제할까요?`);
     if (!confirmed) return;
 
     setIsSubmitting(true);
-    setStatusText("Deleting code rows...");
+    setStatusText("코드 삭제 중...");
     try {
-      const response = await systemCodeApi.deleteMany(
-        targetRows.map((row) => ({ grcodeCd: row.grcodeCd, code: row.code })),
-      );
-      setStatusText(`Deleted ${response.succeeded}, failed ${response.failed}.`);
+      const response = await systemCodeApi.deleteMany(targetRows.map((row) => ({ grcodeCd: row.grcodeCd, code: row.code })));
+      setStatusText(`삭제 ${response.succeeded}건, 실패 ${response.failed}건`);
       await loadCodes(page, query);
     } catch (error) {
-      const failMessage = error instanceof Error ? error.message : "Delete에 실패했습니다.";
+      const failMessage = error instanceof Error ? error.message : "삭제에 실패했습니다.";
       setStatusText(failMessage);
     } finally {
       setIsSubmitting(false);
@@ -190,47 +187,54 @@ export default function SystemCodePage() {
         </div>
       </header>
 
-      <div className="toolbar">
-        <input
-          placeholder="Group code"
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <Input
+          placeholder="그룹 코드"
           value={filters.grcodeCd}
           onChange={(event) => setFilters((prev) => ({ ...prev, grcodeCd: event.target.value }))}
+          className="w-40"
         />
-        <input
-          placeholder="Code"
+        <Input
+          placeholder="코드"
           value={filters.code}
           onChange={(event) => setFilters((prev) => ({ ...prev, code: event.target.value }))}
+          className="w-40"
         />
-        <input
-          placeholder="Code name"
+        <Input
+          placeholder="코드명"
           value={filters.codeNm}
           onChange={(event) => setFilters((prev) => ({ ...prev, codeNm: event.target.value }))}
+          className="w-52"
         />
-        <button type="button" className="ghost" onClick={onSearch} disabled={isLoading}>조회</button>
-        <button type="button" onClick={openCreate} disabled={isSubmitting}>입력</button>
-        <button
+        <Button type="button" variant="outline" onClick={onSearch} disabled={isLoading}>
+          조회
+        </Button>
+        <Button type="button" onClick={openCreate} disabled={isSubmitting}>
+          입력
+        </Button>
+        <Button
           type="button"
-          className="danger"
+          variant="destructive"
           onClick={() => void deleteRows(selectedRows)}
           disabled={selectedRows.length === 0 || isSubmitting}
         >
           선택삭제 ({selectedRows.length})
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
           onClick={async () => {
             try {
               const result = await systemCodeApi.refreshCache();
               setStatusText(result.message);
             } catch (error) {
-              const failMessage = error instanceof Error ? error.message : "Refresh failed.";
+              const failMessage = error instanceof Error ? error.message : "캐시 초기화에 실패했습니다.";
               setStatusText(failMessage);
             }
           }}
         >
-          캐시새로고침
-        </button>
+          캐시 새로고침
+        </Button>
       </div>
 
       <p className="status-text">{statusText}</p>
@@ -245,33 +249,29 @@ export default function SystemCodePage() {
       />
 
       <div className="pagination">
-        <button
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
           onClick={() => {
             const nextPage = Math.max(page - 1, 0);
             setPage(nextPage);
             void loadCodes(nextPage, query);
           }}
           disabled={page === 0 || isLoading}
-        >
-          Prev
-        </button>
+        >이전</Button>
         <span>
-          Page {page + 1} / {totalPages}
+          페이지 {page + 1} / {totalPages}
         </span>
-        <button
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
           onClick={() => {
             const nextPage = Math.min(page + 1, totalPages - 1);
             setPage(nextPage);
             void loadCodes(nextPage, query);
           }}
           disabled={page >= totalPages - 1 || isLoading}
-        >
-          Next
-        </button>
+        >다음</Button>
       </div>
 
       {editor && (
@@ -288,4 +288,5 @@ export default function SystemCodePage() {
     </section>
   );
 }
+
 

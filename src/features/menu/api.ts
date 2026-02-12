@@ -1,4 +1,4 @@
-import type { MenuNode, NavigationMenuItem } from "@/entities/menu/types";
+﻿import type { MenuNode, NavigationMenuItem } from "@/entities/menu/types";
 import { request } from "@/shared/api/http";
 
 const normalizeLegacyPath = (menuPath?: string): string => {
@@ -34,7 +34,7 @@ const normalizeLegacyPath = (menuPath?: string): string => {
     "/ssms/pages/manage/preaction": "/legacy/ssms/pages/manage/PreAction",
     "/ssms/pages/manage/outmanage": "/manage/out-manage",
     "/ssms/pages/manage/outmanagetime": "/manage/out-manage-time",
-    "/ssms/pages/common/dailytask": "/legacy/ssms/pages/common/DailyTask",
+    "/ssms/pages/common/dailytask": "/common/daily-task",
     "/ssms/pages/common/discussion": "/legacy/ssms/pages/common/Discussion",
     "/ssms/pages/develop/developinquiry": "/develop/inquiry",
     "/ssms/pages/develop/developproject": "/develop/project",

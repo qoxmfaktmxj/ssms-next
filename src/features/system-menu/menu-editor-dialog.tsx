@@ -1,5 +1,15 @@
-"use client";
+﻿"use client";
 
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { MenuEditorState, SystemMenuDraft } from "@/features/system-menu/types";
 
 type MenuEditorDialogProps = {
@@ -17,6 +27,9 @@ export const MenuEditorDialog = ({
   onSubmit,
   isSubmitting,
 }: MenuEditorDialogProps) => {
+  const selectClassName =
+    "flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+
   const update = (key: keyof SystemMenuDraft, value: string) => {
     onChange({
       ...state.draft,
@@ -27,68 +40,81 @@ export const MenuEditorDialog = ({
   const title = state.mode === "create" ? "메뉴 입력" : "메뉴 수정";
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="modal-card">
-        <header className="modal-header">
-          <h3>{title}</h3>
-        </header>
-        <div className="form-grid">
-          <label>
-            <span>Menu ID *</span>
-            <input
+    <Dialog open onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent aria-label={title}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-1.5">
+            <Label>메뉴 ID *</Label>
+            <Input
               value={state.draft.menuId}
               onChange={(event) => update("menuId", event.target.value)}
               disabled={state.mode === "edit"}
             />
-          </label>
-          <label>
-            <span>Parent Menu ID</span>
-            <input
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label>상위 메뉴 ID</Label>
+            <Input
               value={state.draft.parentMenuId}
               onChange={(event) => update("parentMenuId", event.target.value)}
             />
-          </label>
-          <label>
-            <span>Menu Label *</span>
-            <input
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label>메뉴명 *</Label>
+            <Input
               value={state.draft.menuLabel}
               onChange={(event) => update("menuLabel", event.target.value)}
             />
-          </label>
-          <label>
-            <span>Menu Path</span>
-            <input
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label>메뉴 경로</Label>
+            <Input
               value={state.draft.menuPath}
               onChange={(event) => update("menuPath", event.target.value)}
             />
-          </label>
-          <label>
-            <span>Menu Icon</span>
-            <input
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label>메뉴 아이콘</Label>
+            <Input
               value={state.draft.menuIcon}
               onChange={(event) => update("menuIcon", event.target.value)}
             />
-          </label>
-          <label>
-            <span>Sequence</span>
-            <input value={state.draft.seq} onChange={(event) => update("seq", event.target.value)} />
-          </label>
-          <label>
-            <span>Use</span>
-            <select value={state.draft.useYn} onChange={(event) => update("useYn", event.target.value)}>
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label>순번</Label>
+            <Input value={state.draft.seq} onChange={(event) => update("seq", event.target.value)} />
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label>사용 여부</Label>
+            <select
+              className={selectClassName}
+              value={state.draft.useYn}
+              onChange={(event) => update("useYn", event.target.value)}
+            >
               <option value="Y">Y</option>
               <option value="N">N</option>
             </select>
-          </label>
+          </div>
         </div>
-        <footer className="modal-actions">
-          <button type="button" className="ghost" onClick={onCancel}>취소</button>
-          <button type="button" onClick={() => void onSubmit()} disabled={isSubmitting}>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onCancel}>
+            취소
+          </Button>
+          <Button type="button" onClick={() => void onSubmit()} disabled={isSubmitting}>
             {isSubmitting ? "저장 중..." : "저장"}
-          </button>
-        </footer>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
-

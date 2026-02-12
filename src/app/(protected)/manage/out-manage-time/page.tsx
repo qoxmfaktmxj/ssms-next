@@ -1,6 +1,17 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { manageOutManageTimeApi } from "@/features/manage-out-manage-time/api";
 import type {
   OutManageCodeOption,
@@ -8,6 +19,7 @@ import type {
   OutManageTimeDetailDraft,
   OutManageTimeSummary,
 } from "@/features/manage-out-manage-time/types";
+import { cn } from "@/lib/utils";
 
 type DetailEditorState = {
   mode: "create" | "edit";
@@ -64,17 +76,14 @@ export default function ManageOutManageTimePage() {
   const [editor, setEditor] = useState<DetailEditorState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusText, setStatusText] = useState("Load out-manage-time data to begin.");
+  const [statusText, setStatusText] = useState("외주 인력 근태 데이터를 불러오세요.");
 
   const selectedSummary = useMemo(
     () => summaryRows.find((row) => summaryKey(row) === selectedSummaryKey) ?? null,
     [selectedSummaryKey, summaryRows],
   );
 
-  const selectedDetailRows = useMemo(
-    () => detailRows.filter((row) => selectedDetailIds.has(row.id)),
-    [detailRows, selectedDetailIds],
-  );
+  const selectedDetailRows = useMemo(() => detailRows.filter((row) => selectedDetailIds.has(row.id)), [detailRows, selectedDetailIds]);
 
   const loadCodes = useCallback(async () => {
     try {
@@ -100,7 +109,7 @@ export default function ManageOutManageTimePage() {
         setSelectedSummaryKey(null);
         setDetailRows([]);
         setSelectedDetailIds(new Set());
-        setStatusText("No summary rows found.");
+        setStatusText("조회된 요약 데이터가 없습니다.");
       } else {
         const first = rows[0];
         setSelectedSummaryKey(summaryKey(first));
@@ -177,7 +186,7 @@ export default function ManageOutManageTimePage() {
         await loadDetail(selectedSummary);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Save에 실패했습니다.";
+      const message = error instanceof Error ? error.message : "Failed to save detail row.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -186,10 +195,10 @@ export default function ManageOutManageTimePage() {
 
   const deleteDetailRows = async (rowsToDelete: OutManageTimeDetail[]) => {
     if (rowsToDelete.length === 0) {
-      setStatusText("Select at least one detail row to delete.");
+      setStatusText("삭제할 상세 행을 하나 이상 선택하세요.");
       return;
     }
-    const confirmed = window.confirm(`Delete ${rowsToDelete.length} detail row(s)?`);
+    const confirmed = window.confirm(`상세 데이터 ${rowsToDelete.length}건을 삭제할까요?`);
     if (!confirmed) {
       return;
     }
@@ -197,15 +206,13 @@ export default function ManageOutManageTimePage() {
     setIsSubmitting(true);
     setStatusText("Deleting detail rows...");
     try {
-      const deleted = await manageOutManageTimeApi.deleteDetails(
-        rowsToDelete.map((row) => ({ id: row.id, sabun: row.sabun })),
-      );
-      setStatusText(deleted ? "Delete succeeded." : "Delete request finished with no change.");
+      const deleted = await manageOutManageTimeApi.deleteDetails(rowsToDelete.map((row) => ({ id: row.id, sabun: row.sabun })));
+      setStatusText(deleted ? "삭제되었습니다." : "삭제 처리 결과 변경된 데이터가 없습니다.");
       if (selectedSummary) {
         await loadDetail(selectedSummary);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Delete에 실패했습니다.";
+      const message = error instanceof Error ? error.message : "Failed to delete detail rows.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -224,28 +231,37 @@ export default function ManageOutManageTimePage() {
     });
   };
 
+  const selectClassName =
+    "flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+
   return (
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>외주인력근태관리</h2>
-          <p className="subtle">외주인력 근태 요약/상세 관리 화면입니다.</p>
+          <h2>외주인력 근태 관리</h2>
+          <p className="subtle">Summary and detail management</p>
         </div>
       </header>
 
-      <div className="toolbar">
-        <input
-          placeholder="Search date (YYYYMMDD)"
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <Input
+          placeholder="조회일 (YYYYMMDD)"
           value={searchYmd}
           onChange={(event) => setSearchYmd(event.target.value)}
+          className="w-44"
         />
-        <input placeholder="Search name" value={searchName} onChange={(event) => setSearchName(event.target.value)} />
-        <button type="button" className="ghost" onClick={() => void loadSummary()} disabled={isLoading}>조회</button>
-        <button
+        <Input
+          placeholder="이름 조회"
+          value={searchName}
+          onChange={(event) => setSearchName(event.target.value)}
+          className="w-44"
+        />
+        <Button type="button" variant="outline" onClick={() => void loadSummary()} disabled={isLoading}>조회</Button>
+        <Button
           type="button"
           onClick={() => {
             if (!selectedSummary) {
-              setStatusText("Select summary row first.");
+              setStatusText("요약 행을 먼저 선택하세요.");
               return;
             }
             setEditor({
@@ -256,129 +272,130 @@ export default function ManageOutManageTimePage() {
           disabled={!selectedSummary}
         >
           Add Detail
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="danger"
+          variant="destructive"
           onClick={() => void deleteDetailRows(selectedDetailRows)}
           disabled={selectedDetailRows.length === 0 || isSubmitting}
-        >
-          선택삭제 ({selectedDetailRows.length})
-        </button>
+        >선택삭제 ({selectedDetailRows.length})
+        </Button>
       </div>
 
       <p className="status-text">{statusText}</p>
 
-      <h3>Summary</h3>
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Sabun</th>
-              <th>Name</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Total</th>
-              <th>Used</th>
-              <th>Remain</th>
-              <th>Note</th>
-            </tr>
-          </thead>
-          <tbody>
+      <h3 className="mt-6 mb-2 text-sm font-semibold text-slate-700">Summary</h3>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead>사번</TableHead>
+              <TableHead>이름</TableHead>
+              <TableHead>시작일</TableHead>
+              <TableHead>종료일</TableHead>
+              <TableHead>총계</TableHead>
+              <TableHead>사용</TableHead>
+              <TableHead>잔여</TableHead>
+              <TableHead>비고</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {summaryRows.map((row) => {
               const key = summaryKey(row);
               const isSelected = key === selectedSummaryKey;
               return (
-                <tr
+                <TableRow
                   key={key}
-                  style={isSelected ? { backgroundColor: "#eef6ff" } : undefined}
+                  className={cn(isSelected ? "bg-blue-50 hover:bg-blue-50" : "")}
                   onClick={() => setSelectedSummaryKey(key)}
                 >
-                  <td>{row.sabun}</td>
-                  <td>{row.name ?? "-"}</td>
-                  <td>{formatYmd(row.sdate)}</td>
-                  <td>{formatYmd(row.edate)}</td>
-                  <td>{row.totalCnt ?? 0}</td>
-                  <td>{row.useCnt ?? 0}</td>
-                  <td>{row.remainCnt ?? 0}</td>
-                  <td>{row.note ?? "-"}</td>
-                </tr>
+                  <TableCell>{row.sabun}</TableCell>
+                  <TableCell>{row.name ?? "-"}</TableCell>
+                  <TableCell>{formatYmd(row.sdate)}</TableCell>
+                  <TableCell>{formatYmd(row.edate)}</TableCell>
+                  <TableCell>{row.totalCnt ?? 0}</TableCell>
+                  <TableCell>{row.useCnt ?? 0}</TableCell>
+                  <TableCell>{row.remainCnt ?? 0}</TableCell>
+                  <TableCell>{row.note ?? "-"}</TableCell>
+                </TableRow>
               );
             })}
             {!isLoading && summaryRows.length === 0 && (
-              <tr>
-                <td colSpan={8} className="empty-row">
-                  No summary rows found.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={8} className="py-8 text-center text-slate-500">
+                  조회된 요약 데이터가 없습니다.
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
-      <h3>Detail</h3>
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th />
-              <th>Sabun</th>
-              <th>Type</th>
-              <th>Apply Date</th>
-              <th>Status</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Apply Count</th>
-              <th>Note</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+      <h3 className="mt-8 mb-2 text-sm font-semibold text-slate-700">Detail</h3>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead />
+              <TableHead>사번</TableHead>
+              <TableHead>유형</TableHead>
+              <TableHead>적용일</TableHead>
+              <TableHead>상태</TableHead>
+              <TableHead>시작일</TableHead>
+              <TableHead>종료일</TableHead>
+              <TableHead>적용 수량</TableHead>
+              <TableHead>비고</TableHead>
+              <TableHead>작업</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {detailRows.map((row) => (
-              <tr key={row.id}>
-                <td>
+              <TableRow key={row.id}>
+                <TableCell>
                   <input
                     type="checkbox"
                     checked={selectedDetailIds.has(row.id)}
                     onChange={(event) => toggleDetail(row.id, event.target.checked)}
                   />
-                </td>
-                <td>{row.sabun}</td>
-                <td>{row.gntName ?? row.gntCd ?? "-"}</td>
-                <td>{formatYmd(row.applyDate)}</td>
-                <td>{row.statusName ?? row.statusCd ?? "-"}</td>
-                <td>{formatYmd(row.sdate)}</td>
-                <td>{formatYmd(row.edate)}</td>
-                <td>{row.applyCnt ?? 0}</td>
-                <td>{row.note ?? "-"}</td>
-                <td className="row-actions">
-                  <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDetailDraft(row) })}>수정</button>
-                  <button type="button" className="danger" onClick={() => void deleteDetailRows([row])}>삭제</button>
-                </td>
-              </tr>
+                </TableCell>
+                <TableCell>{row.sabun}</TableCell>
+                <TableCell>{row.gntName ?? row.gntCd ?? "-"}</TableCell>
+                <TableCell>{formatYmd(row.applyDate)}</TableCell>
+                <TableCell>{row.statusName ?? row.statusCd ?? "-"}</TableCell>
+                <TableCell>{formatYmd(row.sdate)}</TableCell>
+                <TableCell>{formatYmd(row.edate)}</TableCell>
+                <TableCell>{row.applyCnt ?? 0}</TableCell>
+                <TableCell>{row.note ?? "-"}</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => setEditor({ mode: "edit", draft: toDetailDraft(row) })}>수정</Button>
+                    <Button type="button" variant="destructive" size="sm" onClick={() => void deleteDetailRows([row])}>삭제</Button>
+                  </div>
+                </TableCell>
+              </TableRow>
             ))}
             {!isLoading && detailRows.length === 0 && (
-              <tr>
-                <td colSpan={10} className="empty-row">
-                  No detail rows found.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={10} className="py-8 text-center text-slate-500">
+                  조회된 상세 데이터가 없습니다.
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {editor && (
-        <div className="modal-backdrop">
-          <div className="modal-card">
-            <header className="modal-header">
-              <h3>{editor.mode === "create" ? "상세 입력" : "상세 수정"}</h3>
-            </header>
+        <Dialog open onOpenChange={(open) => !open && setEditor(null)}>
+          <DialogContent aria-label={editor.mode === "create" ? "상세 입력" : "상세 수정"}>
+            <DialogHeader>
+              <DialogTitle>{editor.mode === "create" ? "상세 입력" : "상세 수정"}</DialogTitle>
+            </DialogHeader>
 
-            <div className="form-grid">
-              <label>
-                <span>Sabun</span>
-                <input
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-1.5">
+                <Label>Sabun *</Label>
+                <Input
                   value={editor.draft.sabun}
                   disabled={editor.mode === "edit"}
                   onChange={(event) =>
@@ -387,10 +404,11 @@ export default function ManageOutManageTimePage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Type</span>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Type</Label>
                 <select
+                  className={selectClassName}
                   value={editor.draft.gntCd}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -398,17 +416,17 @@ export default function ManageOutManageTimePage() {
                     )
                   }
                 >
-                  <option value="">Select type</option>
+                  <option value="">유형 선택</option>
                   {gntCodes.map((item) => (
                     <option key={item.code} value={item.code}>
                       {item.codeNm}
                     </option>
                   ))}
                 </select>
-              </label>
-              <label>
-                <span>Apply Date (YYYYMMDD)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Apply Date (YYYYMMDD)</Label>
+                <Input
                   value={editor.draft.applyDate}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -416,10 +434,11 @@ export default function ManageOutManageTimePage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Status</span>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Status</Label>
                 <select
+                  className={selectClassName}
                   value={editor.draft.statusCd}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -427,17 +446,17 @@ export default function ManageOutManageTimePage() {
                     )
                   }
                 >
-                  <option value="">Select status</option>
+                  <option value="">상태 선택</option>
                   {statusCodes.map((item) => (
                     <option key={item.code} value={item.code}>
                       {item.codeNm}
                     </option>
                   ))}
                 </select>
-              </label>
-              <label>
-                <span>Start Date (YYYYMMDD)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Start Date (YYYYMMDD)</Label>
+                <Input
                   value={editor.draft.sdate}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -445,10 +464,10 @@ export default function ManageOutManageTimePage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>End Date (YYYYMMDD)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>End Date (YYYYMMDD)</Label>
+                <Input
                   value={editor.draft.edate}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -456,10 +475,10 @@ export default function ManageOutManageTimePage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Apply Count</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Apply Count</Label>
+                <Input
                   value={editor.draft.applyCnt}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -467,10 +486,10 @@ export default function ManageOutManageTimePage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Note</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Note</Label>
+                <Input
                   value={editor.draft.note}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -478,17 +497,19 @@ export default function ManageOutManageTimePage() {
                     )
                   }
                 />
-              </label>
+              </div>
             </div>
 
-            <div className="modal-actions">
-              <button type="button" className="ghost" onClick={() => setEditor(null)}>취소</button>
-              <button type="button" onClick={() => void saveDetail()} disabled={isSubmitting}>저장</button>
-            </div>
-          </div>
-        </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditor(null)}>취소</Button>
+              <Button type="button" onClick={() => void saveDetail()} disabled={isSubmitting}>저장</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </section>
   );
 }
+
+
 

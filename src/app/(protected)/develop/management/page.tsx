@@ -1,12 +1,19 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { developManagementApi } from "@/features/develop-management/api";
-import type {
-  DevelopManagement,
-  DevelopManagementDraft,
-  DevelopManagementFilters,
-} from "@/features/develop-management/types";
+import type { DevelopManagement, DevelopManagementDraft, DevelopManagementFilters } from "@/features/develop-management/types";
 import { manageCompanyApi } from "@/features/manage-company/api";
 import type { ManageCompany } from "@/features/manage-company/types";
 
@@ -109,7 +116,7 @@ export default function DevelopManagementPage() {
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusText, setStatusText] = useState("Load management data to begin.");
+  const [statusText, setStatusText] = useState("관리 데이터를 불러오세요.");
   const [page, setPage] = useState(0);
   const [page2, setPage2] = useState(0);
   const [size] = useState(20);
@@ -117,10 +124,7 @@ export default function DevelopManagementPage() {
   const [totalElements, setTotalElements] = useState(0);
   const [totalElements2, setTotalElements2] = useState(0);
 
-  const selectedRows = useMemo(
-    () => rows.filter((row) => selectedKeys.has(rowKey(row))),
-    [rows, selectedKeys],
-  );
+  const selectedRows = useMemo(() => rows.filter((row) => selectedKeys.has(rowKey(row))), [rows, selectedKeys]);
   const totalPages = useMemo(() => Math.max(Math.ceil(totalElements / size), 1), [size, totalElements]);
   const totalPages2 = useMemo(() => Math.max(Math.ceil(totalElements2 / size2), 1), [size2, totalElements2]);
 
@@ -145,9 +149,7 @@ export default function DevelopManagementPage() {
         setTotalElements(response.totalElements ?? 0);
         setTotalElements2(response2.totalElements ?? 0);
         setSelectedKeys(new Set());
-        setStatusText(
-          `Loaded table1=${response.content?.length ?? 0}, table2=${response2.content?.length ?? 0} rows.`,
-        );
+        setStatusText(`Loaded table1=${response.content?.length ?? 0}, table2=${response2.content?.length ?? 0} rows.`);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to load management lists.";
         setStatusText(message);
@@ -205,7 +207,7 @@ export default function DevelopManagementPage() {
       setEditor(null);
       await loadRows(page, page2, query);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Save에 실패했습니다.";
+      const message = error instanceof Error ? error.message : "Failed to save management row.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -214,10 +216,10 @@ export default function DevelopManagementPage() {
 
   const deleteRows = async (targets: DevelopManagement[]) => {
     if (targets.length === 0) {
-      setStatusText("Select at least one row.");
+      setStatusText("행을 하나 이상 선택하세요.");
       return;
     }
-    const confirmed = window.confirm(`Delete ${targets.length} management row(s)?`);
+    const confirmed = window.confirm(`관리 데이터 ${targets.length}건을 삭제할까요?`);
     if (!confirmed) {
       return;
     }
@@ -234,7 +236,7 @@ export default function DevelopManagementPage() {
       setStatusText(`Deleted ${response.succeeded}, failed ${response.failed}.`);
       await loadRows(page, page2, query);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Delete에 실패했습니다.";
+      const message = error instanceof Error ? error.message : "Failed to delete management rows.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -261,32 +263,39 @@ export default function DevelopManagementPage() {
     setSelectedKeys(new Set(rows.map((row) => rowKey(row))));
   };
 
+  const selectClassName =
+    "flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+
   return (
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>추가개발관리</h2>
-          <p className="subtle">추가개발 목록 1/2 및 CRUD 화면입니다.</p>
+          <h2>추가개발 관리</h2>
+          <p className="subtle">List 1 / List 2 and CRUD</p>
         </div>
       </header>
 
-      <div className="toolbar">
-        <input
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <Input
           placeholder="Company code/name"
           value={filters.companyName}
           onChange={(event) => setFilters((current) => ({ ...current, companyName: event.target.value }))}
+          className="w-52"
         />
-        <input
+        <Input
           placeholder="Start YM (YYYYMM)"
           value={filters.startDate}
           onChange={(event) => setFilters((current) => ({ ...current, startDate: event.target.value }))}
+          className="w-40"
         />
-        <input
+        <Input
           placeholder="End YM (YYYYMM)"
           value={filters.endDate}
           onChange={(event) => setFilters((current) => ({ ...current, endDate: event.target.value }))}
+          className="w-40"
         />
         <select
+          className={selectClassName}
           value={filters.statusCd}
           onChange={(event) => setFilters((current) => ({ ...current, statusCd: event.target.value }))}
         >
@@ -296,176 +305,171 @@ export default function DevelopManagementPage() {
             </option>
           ))}
         </select>
-        <input
-          placeholder="Manager/Requester name"
+        <Input
+          placeholder="Manager/requester name"
           value={filters.mngName}
           onChange={(event) => setFilters((current) => ({ ...current, mngName: event.target.value }))}
+          className="w-52"
         />
-        <button
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
           onClick={() => {
             setPage(0);
             setPage2(0);
             setQuery({ ...filters });
           }}
           disabled={isLoading}
-        >조회</button>
-        <button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft() })}>입력</button>
-        <button
+        >조회</Button>
+        <Button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft() })}>입력</Button>
+        <Button
           type="button"
-          className="danger"
+          variant="destructive"
           onClick={() => void deleteRows(selectedRows)}
           disabled={selectedRows.length === 0 || isSubmitting}
-        >
-          선택삭제 ({selectedRows.length})
-        </button>
+        >선택삭제 ({selectedRows.length})
+        </Button>
       </div>
 
       <p className="status-text">{statusText}</p>
 
-      <h3>List 1</h3>
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>
+      <h3 className="mt-6 mb-2 text-sm font-semibold text-slate-700">List 1</h3>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead>
                 <input
                   type="checkbox"
                   checked={rows.length > 0 && selectedRows.length === rows.length}
                   onChange={(event) => toggleAll(event.target.checked)}
                 />
-              </th>
-              <th>Company</th>
-              <th>Request YM</th>
-              <th>Seq</th>
-              <th>Status</th>
-              <th>Part</th>
-              <th>Requester</th>
-              <th>Period</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+              </TableHead>
+              <TableHead>고객사</TableHead>
+              <TableHead>요청년월</TableHead>
+              <TableHead>순번</TableHead>
+              <TableHead>상태</TableHead>
+              <TableHead>분류</TableHead>
+              <TableHead>요청자</TableHead>
+              <TableHead>기간</TableHead>
+              <TableHead>작업</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.map((row) => {
               const key = rowKey(row);
               return (
-                <tr key={key}>
-                  <td>
+                <TableRow key={key}>
+                  <TableCell>
                     <input
                       type="checkbox"
                       checked={selectedKeys.has(key)}
                       onChange={(event) => toggleOne(key, event.target.checked)}
                     />
-                  </td>
-                  <td>{row.requestCompanyNm ?? row.requestCompanyCd}</td>
-                  <td>{formatYm(row.requestYm)}</td>
-                  <td>{row.requestSeq}</td>
-                  <td>{row.statusCd ?? "-"}</td>
-                  <td>{row.partNm ?? row.partCd ?? "-"}</td>
-                  <td>{row.requestNm ?? "-"}</td>
-                  <td>
+                  </TableCell>
+                  <TableCell>{row.requestCompanyNm ?? row.requestCompanyCd}</TableCell>
+                  <TableCell>{formatYm(row.requestYm)}</TableCell>
+                  <TableCell>{row.requestSeq}</TableCell>
+                  <TableCell>{row.statusCd ?? "-"}</TableCell>
+                  <TableCell>{row.partNm ?? row.partCd ?? "-"}</TableCell>
+                  <TableCell>{row.requestNm ?? "-"}</TableCell>
+                  <TableCell>
                     {formatYm(row.startYm)} ~ {formatYm(row.endYm)}
-                  </td>
-                  <td className="row-actions">
-                    <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>수정</button>
-                    <button type="button" className="danger" onClick={() => void deleteRows([row])}>삭제</button>
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>수정</Button>
+                      <Button type="button" variant="destructive" size="sm" onClick={() => void deleteRows([row])}>삭제</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               );
             })}
             {!isLoading && rows.length === 0 && (
-              <tr>
-                <td colSpan={9} className="empty-row">
-                  No management rows found.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={9} className="py-8 text-center text-slate-500">
+                  조회된 관리 데이터가 없습니다.
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       <div className="pagination">
-        <button type="button" className="ghost" onClick={() => setPage((current) => Math.max(current - 1, 0))} disabled={page === 0 || isLoading}>
-          Prev
-        </button>
+        <Button type="button" variant="outline" onClick={() => setPage((current) => Math.max(current - 1, 0))} disabled={page === 0 || isLoading}>이전</Button>
         <span>
-          Page {page + 1} / {totalPages}
+          페이지 {page + 1} / {totalPages}
         </span>
-        <button
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
           onClick={() => setPage((current) => Math.min(current + 1, totalPages - 1))}
           disabled={page >= totalPages - 1 || isLoading}
-        >
-          Next
-        </button>
+        >다음</Button>
       </div>
 
-      <h3>List 2</h3>
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Company</th>
-              <th>Request YM</th>
-              <th>Seq</th>
-              <th>Status</th>
-              <th>Part</th>
-              <th>Requester</th>
-              <th>Period</th>
-            </tr>
-          </thead>
-          <tbody>
+      <h3 className="mt-8 mb-2 text-sm font-semibold text-slate-700">List 2</h3>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead>고객사</TableHead>
+              <TableHead>요청년월</TableHead>
+              <TableHead>순번</TableHead>
+              <TableHead>상태</TableHead>
+              <TableHead>분류</TableHead>
+              <TableHead>요청자</TableHead>
+              <TableHead>기간</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows2.map((row) => (
-              <tr key={`${rowKey(row)}:list2`}>
-                <td>{row.requestCompanyNm ?? row.requestCompanyCd}</td>
-                <td>{formatYm(row.requestYm)}</td>
-                <td>{row.requestSeq}</td>
-                <td>{row.statusCd ?? "-"}</td>
-                <td>{row.partNm ?? row.partCd ?? "-"}</td>
-                <td>{row.requestNm ?? "-"}</td>
-                <td>
+              <TableRow key={`${rowKey(row)}:list2`}>
+                <TableCell>{row.requestCompanyNm ?? row.requestCompanyCd}</TableCell>
+                <TableCell>{formatYm(row.requestYm)}</TableCell>
+                <TableCell>{row.requestSeq}</TableCell>
+                <TableCell>{row.statusCd ?? "-"}</TableCell>
+                <TableCell>{row.partNm ?? row.partCd ?? "-"}</TableCell>
+                <TableCell>{row.requestNm ?? "-"}</TableCell>
+                <TableCell>
                   {formatYm(row.startYm)} ~ {formatYm(row.endYm)}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
             {!isLoading && rows2.length === 0 && (
-              <tr>
-                <td colSpan={7} className="empty-row">
-                  No list2 rows found.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={7} className="py-8 text-center text-slate-500">
+                  조회된 목록2 데이터가 없습니다.
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       <div className="pagination">
-        <button type="button" className="ghost" onClick={() => setPage2((current) => Math.max(current - 1, 0))} disabled={page2 === 0 || isLoading}>
-          Prev
-        </button>
+        <Button type="button" variant="outline" onClick={() => setPage2((current) => Math.max(current - 1, 0))} disabled={page2 === 0 || isLoading}>이전</Button>
         <span>
-          Page {page2 + 1} / {totalPages2}
+          페이지 {page2 + 1} / {totalPages2}
         </span>
-        <button
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
           onClick={() => setPage2((current) => Math.min(current + 1, totalPages2 - 1))}
           disabled={page2 >= totalPages2 - 1 || isLoading}
-        >
-          Next
-        </button>
+        >다음</Button>
       </div>
 
       {editor && (
-        <div className="modal-backdrop">
-          <div className="modal-card">
-            <header className="modal-header">
-              <h3>{editor.mode === "create" ? "추가개발 입력" : "추가개발 수정"}</h3>
-            </header>
-            <div className="form-grid">
-              <label>
-                <span>Company</span>
+        <Dialog open onOpenChange={(open) => !open && setEditor(null)}>
+          <DialogContent className="max-w-5xl" aria-label={editor.mode === "create" ? "관리 입력" : "관리 수정"}>
+            <DialogHeader>
+              <DialogTitle>{editor.mode === "create" ? "관리 입력" : "관리 수정"}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-1.5">
+                <Label>Company *</Label>
                 <select
+                  className={selectClassName}
                   value={editor.draft.requestCompanyCd}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -481,17 +485,17 @@ export default function DevelopManagementPage() {
                     )
                   }
                 >
-                  <option value="">Select company</option>
+                  <option value="">회사 선택</option>
                   {companies.map((company) => (
                     <option key={company.companyCd} value={company.companyCd}>
                       {company.companyCd} - {company.companyNm}
                     </option>
                   ))}
                 </select>
-              </label>
-              <label>
-                <span>Request YM (YYYYMM)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Request YM (YYYYMM) *</Label>
+                <Input
                   value={editor.draft.requestYm}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -499,10 +503,10 @@ export default function DevelopManagementPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Request Seq</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Request Seq</Label>
+                <Input
                   value={editor.draft.requestSeq}
                   placeholder="Leave blank to auto-generate"
                   onChange={(event) =>
@@ -511,10 +515,11 @@ export default function DevelopManagementPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Status</span>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Status</Label>
                 <select
+                  className={selectClassName}
                   value={editor.draft.statusCd}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -528,10 +533,10 @@ export default function DevelopManagementPage() {
                     </option>
                   ))}
                 </select>
-              </label>
-              <label>
-                <span>Requester Name</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Requester Name</Label>
+                <Input
                   value={editor.draft.requestNm}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -539,43 +544,49 @@ export default function DevelopManagementPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Request Content</span>
-                <input
+              </div>
+              <div className="grid gap-1.5 md:col-span-2">
+                <Label>Request Content</Label>
+                <Input
                   value={editor.draft.requestContent}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current ? { ...current, draft: { ...current.draft, requestContent: event.target.value } } : current,
+                      current
+                        ? { ...current, draft: { ...current.draft, requestContent: event.target.value } }
+                        : current,
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Manager Sabun</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Manager Sabun</Label>
+                <Input
                   value={editor.draft.managerSabun}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current ? { ...current, draft: { ...current.draft, managerSabun: event.target.value } } : current,
+                      current
+                        ? { ...current, draft: { ...current.draft, managerSabun: event.target.value } }
+                        : current,
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Developer Sabun</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Developer Sabun</Label>
+                <Input
                   value={editor.draft.developerSabun}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current ? { ...current, draft: { ...current.draft, developerSabun: event.target.value } } : current,
+                      current
+                        ? { ...current, draft: { ...current.draft, developerSabun: event.target.value } }
+                        : current,
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Start YM</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Start YM</Label>
+                <Input
                   value={editor.draft.startYm}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -583,10 +594,10 @@ export default function DevelopManagementPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>End YM</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>End YM</Label>
+                <Input
                   value={editor.draft.endYm}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -594,10 +605,10 @@ export default function DevelopManagementPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Part Code</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Part Code</Label>
+                <Input
                   value={editor.draft.partCd}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -605,10 +616,10 @@ export default function DevelopManagementPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Real MM</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Real MM</Label>
+                <Input
                   value={editor.draft.realMm}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -616,10 +627,10 @@ export default function DevelopManagementPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Paid MM</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Paid MM</Label>
+                <Input
                   value={editor.draft.paidMm}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -627,10 +638,10 @@ export default function DevelopManagementPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Detail Content</span>
-                <input
+              </div>
+              <div className="grid gap-1.5 md:col-span-2">
+                <Label>Detail Content</Label>
+                <Input
                   value={editor.draft.content}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -638,16 +649,17 @@ export default function DevelopManagementPage() {
                     )
                   }
                 />
-              </label>
+              </div>
             </div>
-            <div className="modal-actions">
-              <button type="button" className="ghost" onClick={() => setEditor(null)}>취소</button>
-              <button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</button>
-            </div>
-          </div>
-        </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditor(null)}>취소</Button>
+              <Button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </section>
   );
 }
+
 

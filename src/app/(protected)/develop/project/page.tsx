@@ -1,6 +1,17 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { developProjectApi } from "@/features/develop-project/api";
 import type { DevelopProject, DevelopProjectDraft } from "@/features/develop-project/types";
 import { manageCompanyApi } from "@/features/manage-company/api";
@@ -71,12 +82,9 @@ export default function DevelopProjectPage() {
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusText, setStatusText] = useState("Load project data to begin.");
+  const [statusText, setStatusText] = useState("프로젝트 데이터를 불러오세요.");
 
-  const selectedRows = useMemo(
-    () => rows.filter((row) => selectedKeys.has(rowKey(row))),
-    [rows, selectedKeys],
-  );
+  const selectedRows = useMemo(() => rows.filter((row) => selectedKeys.has(rowKey(row))), [rows, selectedKeys]);
 
   const loadRows = useCallback(async (nextQuery: { keyword: string; startDate: string; endDate: string }) => {
     setIsLoading(true);
@@ -144,7 +152,7 @@ export default function DevelopProjectPage() {
       setEditor(null);
       await loadRows(query);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Save에 실패했습니다.";
+      const message = error instanceof Error ? error.message : "Failed to save project.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -153,10 +161,10 @@ export default function DevelopProjectPage() {
 
   const deleteRows = async (targets: DevelopProject[]) => {
     if (targets.length === 0) {
-      setStatusText("Select at least one row.");
+      setStatusText("행을 하나 이상 선택하세요.");
       return;
     }
-    const confirmed = window.confirm(`Delete ${targets.length} project row(s)?`);
+    const confirmed = window.confirm(`프로젝트 데이터 ${targets.length}건을 삭제할까요?`);
     if (!confirmed) {
       return;
     }
@@ -167,7 +175,7 @@ export default function DevelopProjectPage() {
       setStatusText(`Deleted ${response.succeeded}, failed ${response.failed}.`);
       await loadRows(query);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Delete에 실패했습니다.";
+      const message = error instanceof Error ? error.message : "Failed to delete project rows.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -194,117 +202,124 @@ export default function DevelopProjectPage() {
     setSelectedKeys(new Set(rows.map((row) => rowKey(row))));
   };
 
+  const selectClassName =
+    "flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+
   return (
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>추가개발프로젝트관리</h2>
-          <p className="subtle">추가개발 프로젝트 조회/입력/수정/삭제 화면입니다.</p>
+          <h2>추가개발 프로젝트 관리</h2>
+          <p className="subtle">Project list/create/update/delete</p>
         </div>
       </header>
 
-      <div className="toolbar">
-        <input
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <Input
           placeholder="Keyword"
           value={filters.keyword}
           onChange={(event) => setFilters((current) => ({ ...current, keyword: event.target.value }))}
+          className="w-48"
         />
-        <input
+        <Input
           placeholder="Start Date (YYYYMMDD)"
           value={filters.startDate}
           onChange={(event) => setFilters((current) => ({ ...current, startDate: event.target.value }))}
+          className="w-44"
         />
-        <input
+        <Input
           placeholder="End Date (YYYYMMDD)"
           value={filters.endDate}
           onChange={(event) => setFilters((current) => ({ ...current, endDate: event.target.value }))}
+          className="w-44"
         />
-        <button type="button" className="ghost" onClick={() => setQuery({ ...filters })} disabled={isLoading}>조회</button>
-        <button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft() })}>입력</button>
-        <button
+        <Button type="button" variant="outline" onClick={() => setQuery({ ...filters })} disabled={isLoading}>조회</Button>
+        <Button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft() })}>입력</Button>
+        <Button
           type="button"
-          className="danger"
+          variant="destructive"
           onClick={() => void deleteRows(selectedRows)}
           disabled={selectedRows.length === 0 || isSubmitting}
-        >
-          선택삭제 ({selectedRows.length})
-        </button>
+        >선택삭제 ({selectedRows.length})
+        </Button>
       </div>
 
       <p className="status-text">{statusText}</p>
 
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead>
                 <input
                   type="checkbox"
                   checked={rows.length > 0 && selectedRows.length === rows.length}
                   onChange={(event) => toggleAll(event.target.checked)}
                 />
-              </th>
-              <th>ID</th>
-              <th>Project</th>
-              <th>Company</th>
-              <th>Part</th>
-              <th>Contract</th>
-              <th>Develop</th>
-              <th>Price</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+              </TableHead>
+              <TableHead>ID</TableHead>
+              <TableHead>프로젝트</TableHead>
+              <TableHead>고객사</TableHead>
+              <TableHead>분류</TableHead>
+              <TableHead>계약기간</TableHead>
+              <TableHead>개발기간</TableHead>
+              <TableHead>금액</TableHead>
+              <TableHead>작업</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.map((row) => {
               const key = rowKey(row);
               return (
-                <tr key={key}>
-                  <td>
+                <TableRow key={key}>
+                  <TableCell>
                     <input
                       type="checkbox"
                       checked={selectedKeys.has(key)}
                       onChange={(event) => toggleOne(key, event.target.checked)}
                     />
-                  </td>
-                  <td>{row.projectId}</td>
-                  <td>{row.projectNm}</td>
-                  <td>{row.requestCompanyNm ?? row.requestCompanyCd}</td>
-                  <td>{row.partNm ?? row.partCd ?? "-"}</td>
-                  <td>
+                  </TableCell>
+                  <TableCell>{row.projectId}</TableCell>
+                  <TableCell>{row.projectNm}</TableCell>
+                  <TableCell>{row.requestCompanyNm ?? row.requestCompanyCd}</TableCell>
+                  <TableCell>{row.partNm ?? row.partCd ?? "-"}</TableCell>
+                  <TableCell>
                     {formatDate(row.contractStdDt)} ~ {formatDate(row.contractEndDt)}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     {formatDate(row.developStdDt)} ~ {formatDate(row.developEndDt)}
-                  </td>
-                  <td>{row.contractPrice ?? 0}</td>
-                  <td className="row-actions">
-                    <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>수정</button>
-                    <button type="button" className="danger" onClick={() => void deleteRows([row])}>삭제</button>
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell>{row.contractPrice ?? 0}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>수정</Button>
+                      <Button type="button" variant="destructive" size="sm" onClick={() => void deleteRows([row])}>삭제</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               );
             })}
             {!isLoading && rows.length === 0 && (
-              <tr>
-                <td colSpan={9} className="empty-row">
-                  No project rows found.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={9} className="py-8 text-center text-slate-500">
+                  조회된 프로젝트 데이터가 없습니다.
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {editor && (
-        <div className="modal-backdrop">
-          <div className="modal-card">
-            <header className="modal-header">
-              <h3>{editor.mode === "create" ? "프로젝트 입력" : "프로젝트 수정"}</h3>
-            </header>
-            <div className="form-grid">
-              <label>
-                <span>Project Name</span>
-                <input
+        <Dialog open onOpenChange={(open) => !open && setEditor(null)}>
+          <DialogContent className="max-w-5xl" aria-label={editor.mode === "create" ? "프로젝트 입력" : "프로젝트 수정"}>
+            <DialogHeader>
+              <DialogTitle>{editor.mode === "create" ? "프로젝트 입력" : "프로젝트 수정"}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-1.5">
+                <Label>Project Name *</Label>
+                <Input
                   value={editor.draft.projectNm}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -312,10 +327,11 @@ export default function DevelopProjectPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Company</span>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Company *</Label>
                 <select
+                  className={selectClassName}
                   value={editor.draft.requestCompanyCd}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -328,17 +344,17 @@ export default function DevelopProjectPage() {
                     )
                   }
                 >
-                  <option value="">Select company</option>
+                  <option value="">회사 선택</option>
                   {companies.map((company) => (
                     <option key={company.companyCd} value={company.companyCd}>
                       {company.companyCd} - {company.companyNm}
                     </option>
                   ))}
                 </select>
-              </label>
-              <label>
-                <span>Part Code</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Part Code *</Label>
+                <Input
                   value={editor.draft.partCd}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -346,76 +362,88 @@ export default function DevelopProjectPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Input Man Power</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Input Man Power</Label>
+                <Input
                   value={editor.draft.inputManPower}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current ? { ...current, draft: { ...current.draft, inputManPower: event.target.value } } : current,
+                      current
+                        ? { ...current, draft: { ...current.draft, inputManPower: event.target.value } }
+                        : current,
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Contract Start (YYYYMM)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Contract Start (YYYYMM)</Label>
+                <Input
                   value={editor.draft.contractStdDt}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current ? { ...current, draft: { ...current.draft, contractStdDt: event.target.value } } : current,
+                      current
+                        ? { ...current, draft: { ...current.draft, contractStdDt: event.target.value } }
+                        : current,
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Contract End (YYYYMM)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Contract End (YYYYMM)</Label>
+                <Input
                   value={editor.draft.contractEndDt}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current ? { ...current, draft: { ...current.draft, contractEndDt: event.target.value } } : current,
+                      current
+                        ? { ...current, draft: { ...current.draft, contractEndDt: event.target.value } }
+                        : current,
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Develop Start (YYYYMMDD)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Develop Start (YYYYMMDD)</Label>
+                <Input
                   value={editor.draft.developStdDt}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current ? { ...current, draft: { ...current.draft, developStdDt: event.target.value } } : current,
+                      current
+                        ? { ...current, draft: { ...current.draft, developStdDt: event.target.value } }
+                        : current,
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Develop End (YYYYMMDD)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Develop End (YYYYMMDD)</Label>
+                <Input
                   value={editor.draft.developEndDt}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current ? { ...current, draft: { ...current.draft, developEndDt: event.target.value } } : current,
+                      current
+                        ? { ...current, draft: { ...current.draft, developEndDt: event.target.value } }
+                        : current,
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Inspection (Y/N)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Inspection (Y/N)</Label>
+                <Input
                   value={editor.draft.inspectionYn}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current ? { ...current, draft: { ...current.draft, inspectionYn: event.target.value } } : current,
+                      current
+                        ? { ...current, draft: { ...current.draft, inspectionYn: event.target.value } }
+                        : current,
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Tax Bill (Y/N)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Tax Bill (Y/N)</Label>
+                <Input
                   value={editor.draft.taxBillYn}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -423,10 +451,10 @@ export default function DevelopProjectPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Real MM</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Real MM</Label>
+                <Input
                   value={editor.draft.realMm}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -434,21 +462,23 @@ export default function DevelopProjectPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Contract Price</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Contract Price</Label>
+                <Input
                   value={editor.draft.contractPrice}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current ? { ...current, draft: { ...current.draft, contractPrice: event.target.value } } : current,
+                      current
+                        ? { ...current, draft: { ...current.draft, contractPrice: event.target.value } }
+                        : current,
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>File Seq</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>File Seq</Label>
+                <Input
                   value={editor.draft.fileSeq}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -456,10 +486,10 @@ export default function DevelopProjectPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Remark</span>
-                <input
+              </div>
+              <div className="grid gap-1.5 md:col-span-2">
+                <Label>Remark</Label>
+                <Input
                   value={editor.draft.remark}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -467,16 +497,19 @@ export default function DevelopProjectPage() {
                     )
                   }
                 />
-              </label>
+              </div>
             </div>
-            <div className="modal-actions">
-              <button type="button" className="ghost" onClick={() => setEditor(null)}>취소</button>
-              <button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</button>
-            </div>
-          </div>
-        </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditor(null)}>취소</Button>
+              <Button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </section>
   );
 }
+
+
+
 

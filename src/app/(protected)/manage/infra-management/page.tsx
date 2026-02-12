@@ -1,6 +1,17 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { manageInfraApi } from "@/features/manage-infra/api";
 import type {
   InfraCompanyOption,
@@ -11,6 +22,7 @@ import type {
   InfraSectionDraft,
   InfraSummary,
 } from "@/features/manage-infra/types";
+import { cn } from "@/lib/utils";
 
 type InfraEditorState = {
   draft: InfraMasterDraft;
@@ -58,7 +70,7 @@ export default function ManageInfraManagementPage() {
   const [editor, setEditor] = useState<InfraEditorState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusText, setStatusText] = useState("Load infra data to begin.");
+  const [statusText, setStatusText] = useState("인프라 데이터를 불러오세요.");
 
   const selectedSummary = useMemo(
     () => rows.find((row) => rowKey(row) === selectedSummaryKey) ?? null,
@@ -186,7 +198,7 @@ export default function ManageInfraManagementPage() {
       setEditor(null);
       await loadList(query);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Create failed.";
+      const message = error instanceof Error ? error.message : "생성에 실패했습니다.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -195,10 +207,10 @@ export default function ManageInfraManagementPage() {
 
   const deleteSelectedMaster = async () => {
     if (selectedRows.length === 0) {
-      setStatusText("Select at least one summary row.");
+      setStatusText("요약 행을 하나 이상 선택하세요.");
       return;
     }
-    const confirmed = window.confirm(`Delete ${selectedRows.length} infra mapping group(s)?`);
+    const confirmed = window.confirm(`인프라 매핑 그룹 ${selectedRows.length}건을 삭제할까요?`);
     if (!confirmed) {
       return;
     }
@@ -214,7 +226,7 @@ export default function ManageInfraManagementPage() {
       setStatusText(`Deleted ${response.succeeded}, failed ${response.failed}.`);
       await loadList(query);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Delete에 실패했습니다.";
+      const message = error instanceof Error ? error.message : "Failed to delete mappings.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -223,11 +235,11 @@ export default function ManageInfraManagementPage() {
 
   const deleteCurrentMapping = async () => {
     if (!selectedSummary) {
-      setStatusText("Select summary row first.");
+      setStatusText("요약 행을 먼저 선택하세요.");
       return;
     }
     const confirmed = window.confirm(
-      `Delete selected mapping (${selectedSummary.companyCd}, task ${selectedSummary.taskGubunCd}, env ${selectedDevGb})?`,
+      `선택한 매핑(${selectedSummary.companyCd}, 업무 ${selectedSummary.taskGubunCd}, 환경 ${selectedDevGb})을 삭제할까요?`,
     );
     if (!confirmed) {
       return;
@@ -235,15 +247,11 @@ export default function ManageInfraManagementPage() {
     setIsSubmitting(true);
     setStatusText("Deleting selected mapping...");
     try {
-      const response = await manageInfraApi.deleteMapping(
-        selectedSummary.companyCd,
-        selectedSummary.taskGubunCd,
-        selectedDevGb,
-      );
+      const response = await manageInfraApi.deleteMapping(selectedSummary.companyCd, selectedSummary.taskGubunCd, selectedDevGb);
       setStatusText(`Deleted ${response.succeeded}, failed ${response.failed}.`);
       await loadList(query);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Delete에 실패했습니다.";
+      const message = error instanceof Error ? error.message : "Failed to delete selected mapping.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -252,7 +260,7 @@ export default function ManageInfraManagementPage() {
 
   const validateSectionDraft = (draft: InfraSectionDraft): string | null => {
     if (!draft.companyCd.trim() || !draft.taskGubunCd.trim() || !draft.devGbCd.trim()) {
-      return "Select summary row first.";
+      return "요약 행을 먼저 선택하세요.";
     }
     if (!draft.sectionId.trim()) {
       return "Section ID is required.";
@@ -278,29 +286,34 @@ export default function ManageInfraManagementPage() {
         await loadDetail(selectedSummary, selectedDevGb);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Save section failed.";
+      const message = error instanceof Error ? error.message : "섹션 저장에 실패했습니다.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const selectClassName =
+    "flex h-10 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+
   return (
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>인프라구성관리</h2>
-          <p className="subtle">인프라 요약/마스터/섹션 관리 화면입니다.</p>
+          <h2>인프라 구성 관리</h2>
+          <p className="subtle">Summary, master, and section management</p>
         </div>
       </header>
 
-      <div className="toolbar">
-        <input
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <Input
           placeholder="Company code or name"
           value={filters.keyword}
           onChange={(event) => setFilters((current) => ({ ...current, keyword: event.target.value }))}
+          className="w-52"
         />
         <select
+          className={selectClassName}
           value={filters.taskGubunCd}
           onChange={(event) => setFilters((current) => ({ ...current, taskGubunCd: event.target.value }))}
         >
@@ -310,218 +323,205 @@ export default function ManageInfraManagementPage() {
             </option>
           ))}
         </select>
-        <button type="button" className="ghost" onClick={() => setQuery({ ...filters })} disabled={isLoading}>조회</button>
-        <button type="button" onClick={() => setEditor({ draft: emptyMasterDraft() })}>
-          매핑입력
-        </button>
-        <button type="button" className="danger" onClick={() => void deleteSelectedMaster()} disabled={selectedRows.length === 0}>
-          선택삭제 ({selectedRows.length})
-        </button>
+        <Button type="button" variant="outline" onClick={() => setQuery({ ...filters })} disabled={isLoading}>조회</Button>
+        <Button type="button" onClick={() => setEditor({ draft: emptyMasterDraft() })}>
+          매핑 입력
+        </Button>
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={() => void deleteSelectedMaster()}
+          disabled={selectedRows.length === 0}
+        >선택삭제 ({selectedRows.length})
+        </Button>
       </div>
 
       <p className="status-text">{statusText}</p>
 
-      <h3>Summary</h3>
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>
+      <h3 className="mt-6 mb-2 text-sm font-semibold text-slate-700">Summary</h3>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead>
                 <input
                   type="checkbox"
                   checked={rows.length > 0 && selectedRows.length === rows.length}
                   onChange={(event) => toggleAllSummary(event.target.checked)}
                 />
-              </th>
-              <th>Task</th>
-              <th>Company Code</th>
-              <th>Company Name</th>
-              <th>Dev</th>
-              <th>Prod</th>
-            </tr>
-          </thead>
-          <tbody>
+              </TableHead>
+              <TableHead>업무</TableHead>
+              <TableHead>고객사 코드</TableHead>
+              <TableHead>고객사명</TableHead>
+              <TableHead>개발</TableHead>
+              <TableHead>운영</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.map((row) => {
               const key = rowKey(row);
               const isSelected = key === selectedSummaryKey;
               return (
-                <tr
+                <TableRow
                   key={key}
-                  style={isSelected ? { backgroundColor: "#eef6ff" } : undefined}
+                  className={cn(isSelected ? "bg-blue-50 hover:bg-blue-50" : "")}
                   onClick={() => setSelectedSummaryKey(key)}
                 >
-                  <td>
+                  <TableCell>
                     <input
                       type="checkbox"
                       checked={selectedKeys.has(key)}
                       onChange={(event) => toggleSummary(key, event.target.checked)}
                     />
-                  </td>
-                  <td>{row.taskGubunNm}</td>
-                  <td>{row.companyCd}</td>
-                  <td>{row.companyNm ?? "-"}</td>
-                  <td>{row.devYn}</td>
-                  <td>{row.prodYn}</td>
-                </tr>
+                  </TableCell>
+                  <TableCell>{row.taskGubunNm}</TableCell>
+                  <TableCell>{row.companyCd}</TableCell>
+                  <TableCell>{row.companyNm ?? "-"}</TableCell>
+                  <TableCell>{row.devYn}</TableCell>
+                  <TableCell>{row.prodYn}</TableCell>
+                </TableRow>
               );
             })}
             {!isLoading && rows.length === 0 && (
-              <tr>
-                <td colSpan={6} className="empty-row">
-                  No infra summary rows found.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={6} className="py-8 text-center text-slate-500">
+                  조회된 인프라 요약 데이터가 없습니다.
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
-      <div className="toolbar">
-        <span className="subtle">Environment</span>
-        <select value={selectedDevGb} onChange={(event) => setSelectedDevGb(event.target.value)}>
-          <option value="1">Development</option>
-          <option value="2">Production</option>
+      <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <span className="text-sm font-medium text-slate-600">Environment</span>
+        <select className={selectClassName} value={selectedDevGb} onChange={(event) => setSelectedDevGb(event.target.value)}>
+          <option value="1">개발</option>
+          <option value="2">운영</option>
         </select>
-        <button type="button" className="danger" onClick={() => void deleteCurrentMapping()} disabled={!selectedSummary}>
-          현재매핑삭제
-        </button>
+        <Button type="button" variant="destructive" onClick={() => void deleteCurrentMapping()} disabled={!selectedSummary}>
+          현재 매핑 삭제
+        </Button>
       </div>
 
-      <h3>Master Rows</h3>
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Task</th>
-              <th>Company Code</th>
-              <th>Company Name</th>
-              <th>Environment</th>
-            </tr>
-          </thead>
-          <tbody>
+      <h3 className="mt-6 mb-2 text-sm font-semibold text-slate-700">Master Rows</h3>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead>업무</TableHead>
+              <TableHead>고객사 코드</TableHead>
+              <TableHead>고객사명</TableHead>
+              <TableHead>환경</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {masters.map((row, index) => (
-              <tr key={`${row.companyCd}:${row.taskGubunCd}:${row.devGbCd}:${index}`}>
-                <td>{row.taskGubunNm}</td>
-                <td>{row.companyCd}</td>
-                <td>{row.companyNm ?? "-"}</td>
-                <td>{row.devGbCd === "1" ? "Development" : row.devGbCd === "2" ? "Production" : row.devGbCd}</td>
-              </tr>
+              <TableRow key={`${row.companyCd}:${row.taskGubunCd}:${row.devGbCd}:${index}`}>
+                <TableCell>{row.taskGubunNm}</TableCell>
+                <TableCell>{row.companyCd}</TableCell>
+                <TableCell>{row.companyNm ?? "-"}</TableCell>
+                <TableCell>{row.devGbCd === "1" ? "개발" : row.devGbCd === "2" ? "운영" : row.devGbCd}</TableCell>
+              </TableRow>
             ))}
             {!isLoading && masters.length === 0 && (
-              <tr>
-                <td colSpan={4} className="empty-row">
-                  No master rows found.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={4} className="py-8 text-center text-slate-500">
+                  조회된 마스터 데이터가 없습니다.
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
-      <h3>Section Rows</h3>
-      <div className="form-grid">
-        <label>
-          <span>Section ID</span>
-          <input
-            value={sectionDraft.sectionId}
-            onChange={(event) => setSectionDraft((current) => ({ ...current, sectionId: event.target.value }))}
-          />
-        </label>
-        <label>
-          <span>Sequence</span>
-          <input
-            value={sectionDraft.seq}
-            onChange={(event) => setSectionDraft((current) => ({ ...current, seq: event.target.value }))}
-          />
-        </label>
-        <label>
-          <span>Title</span>
-          <input
-            value={sectionDraft.title}
-            onChange={(event) => setSectionDraft((current) => ({ ...current, title: event.target.value }))}
-          />
-        </label>
-        <label>
-          <span>Type</span>
-          <input
-            value={sectionDraft.type}
-            onChange={(event) => setSectionDraft((current) => ({ ...current, type: event.target.value }))}
-          />
-        </label>
-        <label>
-          <span>Column Name</span>
-          <input
-            value={sectionDraft.columnNm}
-            onChange={(event) => setSectionDraft((current) => ({ ...current, columnNm: event.target.value }))}
-          />
-        </label>
-        <label>
-          <span>Column Seq</span>
-          <input
-            value={sectionDraft.columnSeq}
-            onChange={(event) => setSectionDraft((current) => ({ ...current, columnSeq: event.target.value }))}
-          />
-        </label>
-        <label>
-          <span>Contents</span>
-          <input
-            value={sectionDraft.contents}
-            onChange={(event) => setSectionDraft((current) => ({ ...current, contents: event.target.value }))}
-          />
-        </label>
+      <h3 className="mt-6 mb-2 text-sm font-semibold text-slate-700">Section Rows</h3>
+      <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-1.5">
+            <Label>Section ID</Label>
+            <Input value={sectionDraft.sectionId} onChange={(event) => setSectionDraft((current) => ({ ...current, sectionId: event.target.value }))} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Sequence</Label>
+            <Input value={sectionDraft.seq} onChange={(event) => setSectionDraft((current) => ({ ...current, seq: event.target.value }))} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Title</Label>
+            <Input value={sectionDraft.title} onChange={(event) => setSectionDraft((current) => ({ ...current, title: event.target.value }))} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Type</Label>
+            <Input value={sectionDraft.type} onChange={(event) => setSectionDraft((current) => ({ ...current, type: event.target.value }))} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Column Name</Label>
+            <Input value={sectionDraft.columnNm} onChange={(event) => setSectionDraft((current) => ({ ...current, columnNm: event.target.value }))} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Column Seq</Label>
+            <Input value={sectionDraft.columnSeq} onChange={(event) => setSectionDraft((current) => ({ ...current, columnSeq: event.target.value }))} />
+          </div>
+          <div className="grid gap-1.5 md:col-span-3">
+            <Label>Contents</Label>
+            <Input value={sectionDraft.contents} onChange={(event) => setSectionDraft((current) => ({ ...current, contents: event.target.value }))} />
+          </div>
+        </div>
+        <div className="mt-3 flex justify-end">
+          <Button type="button" onClick={() => void saveSection()} disabled={!selectedSummary || isSubmitting}>
+            Add Section Row
+          </Button>
+        </div>
       </div>
-      <div className="toolbar">
-        <button type="button" onClick={() => void saveSection()} disabled={!selectedSummary || isSubmitting}>
-          Add Section Row
-        </button>
-      </div>
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Section ID</th>
-              <th>Seq</th>
-              <th>Title</th>
-              <th>Type</th>
-              <th>Column Name</th>
-              <th>Column Seq</th>
-              <th>Contents</th>
-            </tr>
-          </thead>
-          <tbody>
+
+      <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead>섹션 ID</TableHead>
+              <TableHead>순번</TableHead>
+              <TableHead>제목</TableHead>
+              <TableHead>유형</TableHead>
+              <TableHead>컬럼명</TableHead>
+              <TableHead>컬럼 순서</TableHead>
+              <TableHead>내용</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {sections.map((row, index) => (
-              <tr key={`${row.sectionId ?? ""}:${row.seq ?? 0}:${index}`}>
-                <td>{row.sectionId ?? "-"}</td>
-                <td>{row.seq ?? "-"}</td>
-                <td>{row.title ?? "-"}</td>
-                <td>{row.type ?? "-"}</td>
-                <td>{row.columnNm ?? "-"}</td>
-                <td>{row.columnSeq ?? "-"}</td>
-                <td>{row.contents ?? "-"}</td>
-              </tr>
+              <TableRow key={`${row.sectionId ?? ""}:${row.seq ?? 0}:${index}`}>
+                <TableCell>{row.sectionId ?? "-"}</TableCell>
+                <TableCell>{row.seq ?? "-"}</TableCell>
+                <TableCell>{row.title ?? "-"}</TableCell>
+                <TableCell>{row.type ?? "-"}</TableCell>
+                <TableCell>{row.columnNm ?? "-"}</TableCell>
+                <TableCell>{row.columnSeq ?? "-"}</TableCell>
+                <TableCell>{row.contents ?? "-"}</TableCell>
+              </TableRow>
             ))}
             {!isLoading && sections.length === 0 && (
-              <tr>
-                <td colSpan={7} className="empty-row">
-                  No section rows found.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={7} className="py-8 text-center text-slate-500">
+                  조회된 섹션 데이터가 없습니다.
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {editor && (
-        <div className="modal-backdrop">
-          <div className="modal-card">
-            <header className="modal-header">
-              <h3>인프라 매핑 입력</h3>
-            </header>
+        <Dialog open onOpenChange={(open) => !open && setEditor(null)}>
+          <DialogContent aria-label="인프라 매핑 입력">
+            <DialogHeader>
+              <DialogTitle>인프라 매핑 입력</DialogTitle>
+            </DialogHeader>
 
-            <div className="form-grid">
-              <label>
-                <span>Company</span>
+            <div className="grid gap-3">
+              <div className="grid gap-1.5">
+                <Label>Company</Label>
                 <select
+                  className={selectClassName}
                   value={editor.draft.companyCd}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -529,17 +529,18 @@ export default function ManageInfraManagementPage() {
                     )
                   }
                 >
-                  <option value="">Select company</option>
+                  <option value="">회사 선택</option>
                   {companies.map((row) => (
                     <option key={row.companyCd} value={row.companyCd}>
                       {row.companyCd} - {row.companyNm}
                     </option>
                   ))}
                 </select>
-              </label>
-              <label>
-                <span>Task Category</span>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Task Category</Label>
                 <select
+                  className={selectClassName}
                   value={editor.draft.taskGubunCd}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -547,7 +548,7 @@ export default function ManageInfraManagementPage() {
                     )
                   }
                 >
-                  <option value="">Select task</option>
+                  <option value="">업무 선택</option>
                   {taskOptions
                     .filter((item) => item.value)
                     .map((item) => (
@@ -556,11 +557,11 @@ export default function ManageInfraManagementPage() {
                       </option>
                     ))}
                 </select>
-              </label>
-              <label>
-                <span>Environment</span>
-                <div className="row-actions">
-                  <label>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Environment</Label>
+                <div className="flex gap-4 text-sm text-slate-700">
+                  <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={editor.draft.devGbCdList.includes("1")}
@@ -587,7 +588,7 @@ export default function ManageInfraManagementPage() {
                     />
                     Dev
                   </label>
-                  <label>
+                  <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={editor.draft.devGbCdList.includes("2")}
@@ -615,17 +616,18 @@ export default function ManageInfraManagementPage() {
                     Prod
                   </label>
                 </div>
-              </label>
+              </div>
             </div>
 
-            <div className="modal-actions">
-              <button type="button" className="ghost" onClick={() => setEditor(null)}>취소</button>
-              <button type="button" onClick={() => void saveMaster()} disabled={isSubmitting}>저장</button>
-            </div>
-          </div>
-        </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditor(null)}>취소</Button>
+              <Button type="button" onClick={() => void saveMaster()} disabled={isSubmitting}>저장</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </section>
   );
 }
+
 

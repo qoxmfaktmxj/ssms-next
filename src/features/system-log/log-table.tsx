@@ -1,5 +1,7 @@
-"use client";
+﻿"use client";
 
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { SystemLogRecord } from "@/features/system-log/types";
 
 type LogTableProps = {
@@ -16,46 +18,49 @@ const formatDate = (value: string): string => {
 
 export const LogTable = ({ rows }: LogTableProps) => {
   return (
-    <div className="table-wrap">
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Created At</th>
-            <th>Sabun</th>
-            <th>Action</th>
-            <th>Request URL</th>
-            <th>IP</th>
-            <th>Result</th>
-            <th>Error</th>
-          </tr>
-        </thead>
-        <tbody>
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+            <TableHead>ID</TableHead>
+            <TableHead>생성일시</TableHead>
+            <TableHead>사번</TableHead>
+            <TableHead>작업</TableHead>
+            <TableHead>요청 URL</TableHead>
+            <TableHead>IP</TableHead>
+            <TableHead>결과</TableHead>
+            <TableHead>오류</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {rows.length === 0 ? (
-            <tr>
-              <td colSpan={8} className="empty-row">
-                No log data found.
-              </td>
-            </tr>
+            <TableRow>
+              <TableCell colSpan={8} className="py-8 text-center text-slate-500">
+                조회된 로그 데이터가 없습니다.
+              </TableCell>
+            </TableRow>
           ) : (
             rows.map((row) => (
-              <tr key={row.logId}>
-                <td>{row.logId}</td>
-                <td>{formatDate(row.createdAt)}</td>
-                <td>{row.sabun ?? "-"}</td>
-                <td>{row.actionType}</td>
-                <td className="path-cell">{row.requestUrl ?? "-"}</td>
-                <td>{row.ipAddress ?? "-"}</td>
-                <td>
-                  <span className={row.successYn === "Y" ? "badge green" : "badge red"}>{row.successYn}</span>
-                </td>
-                <td>{row.errorMessage ?? "-"}</td>
-              </tr>
+              <TableRow key={row.logId}>
+                <TableCell>{row.logId}</TableCell>
+                <TableCell>{formatDate(row.createdAt)}</TableCell>
+                <TableCell>{row.sabun ?? "-"}</TableCell>
+                <TableCell>{row.actionType}</TableCell>
+                <TableCell className="max-w-[24rem] break-all">{row.requestUrl ?? "-"}</TableCell>
+                <TableCell>{row.ipAddress ?? "-"}</TableCell>
+                <TableCell>
+                  <Badge variant={row.successYn === "Y" ? "success" : "destructive"}>{row.successYn}</Badge>
+                </TableCell>
+                <TableCell>{row.errorMessage ?? "-"}</TableCell>
+              </TableRow>
             ))
           )}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 };
+
+
+
 

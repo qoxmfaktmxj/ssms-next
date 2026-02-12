@@ -1,6 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { MenuEditorDialog } from "@/features/system-menu/menu-editor-dialog";
 import { MenuTable } from "@/features/system-menu/menu-table";
 import { systemMenuApi } from "@/features/system-menu/api";
@@ -45,21 +47,21 @@ export default function SystemMenuPage() {
   const [editor, setEditor] = useState<MenuEditorState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusText, setStatusText] = useState("Load menu data to begin.");
+  const [statusText, setStatusText] = useState("메뉴 데이터를 불러오세요.");
 
   const selectedCount = selectedIds.size;
   const orderedRows = useMemo(() => sortRows(rows), [rows]);
 
   const loadRows = useCallback(async (nextQuery: string) => {
     setIsLoading(true);
-    setStatusText("Loading menu list...");
+    setStatusText("메뉴 목록 조회 중...");
     try {
       const list = await systemMenuApi.list(nextQuery);
       setRows(list);
       setSelectedIds(new Set());
-      setStatusText(`Loaded ${list.length} rows.`);
+      setStatusText(`${list.length}건 조회되었습니다.`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to load rows.";
+      const message = error instanceof Error ? error.message : "목록 조회에 실패했습니다.";
       setStatusText(message);
     } finally {
       setIsLoading(false);
@@ -76,34 +78,28 @@ export default function SystemMenuPage() {
   }, [loadRows]);
 
   const openCreate = () => {
-    setEditor({
-      mode: "create",
-      draft: emptyDraft(),
-    });
+    setEditor({ mode: "create", draft: emptyDraft() });
   };
 
   const openEdit = (row: SystemMenuRecord) => {
-    setEditor({
-      mode: "edit",
-      draft: toDraft(row),
-    });
+    setEditor({ mode: "edit", draft: toDraft(row) });
   };
 
   const validateDraft = (draft: SystemMenuDraft): string | null => {
     if (draft.menuId.trim().length === 0) {
-      return "Menu ID is required.";
+      return "메뉴 ID는 필수입니다.";
     }
     if (!Number.isFinite(Number(draft.menuId))) {
-      return "Menu ID must be numeric.";
+      return "메뉴 ID는 숫자여야 합니다.";
     }
     if (draft.menuLabel.trim().length === 0) {
-      return "Menu label is required.";
+      return "메뉴명은 필수입니다.";
     }
     if (draft.seq.trim().length > 0 && !Number.isFinite(Number(draft.seq))) {
-      return "Sequence must be numeric.";
+      return "정렬 순서는 숫자여야 합니다.";
     }
     if (draft.parentMenuId.trim().length > 0 && !Number.isFinite(Number(draft.parentMenuId))) {
-      return "Parent menu ID must be numeric.";
+      return "상위 메뉴 ID는 숫자여야 합니다.";
     }
     return null;
   };
@@ -119,7 +115,7 @@ export default function SystemMenuPage() {
     }
 
     setIsSubmitting(true);
-    setStatusText(editor.mode === "create" ? "Creating menu..." : "Updating menu...");
+    setStatusText(editor.mode === "create" ? "메뉴 등록 중..." : "메뉴 수정 중...");
     try {
       if (editor.mode === "create") {
         await systemMenuApi.create(editor.draft);
@@ -129,7 +125,7 @@ export default function SystemMenuPage() {
       setEditor(null);
       await loadRows(query);
     } catch (saveError) {
-      const message = saveError instanceof Error ? saveError.message : "Save에 실패했습니다.";
+      const message = saveError instanceof Error ? saveError.message : "저장에 실패했습니다.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -138,23 +134,23 @@ export default function SystemMenuPage() {
 
   const deleteByIds = async (menuIds: number[]) => {
     if (menuIds.length === 0) {
-      setStatusText("Select at least one row to delete.");
+      setStatusText("삭제할 행을 선택하세요.");
       return;
     }
 
-    const confirmed = window.confirm(`Delete ${menuIds.length} selected menu rows?`);
+    const confirmed = window.confirm(`선택한 메뉴 ${menuIds.length}건을 삭제할까요?`);
     if (!confirmed) {
       return;
     }
 
     setIsSubmitting(true);
-    setStatusText("Deleting selected rows...");
+    setStatusText("메뉴 삭제 중...");
     try {
       const result = await systemMenuApi.deleteMany(menuIds);
-      setStatusText(`Deleted ${result.succeeded}, failed ${result.failed}.`);
+      setStatusText(`삭제 ${result.succeeded}건, 실패 ${result.failed}건`);
       await loadRows(query);
     } catch (deleteError) {
-      const message = deleteError instanceof Error ? deleteError.message : "Delete에 실패했습니다.";
+      const message = deleteError instanceof Error ? deleteError.message : "삭제에 실패했습니다.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -190,9 +186,9 @@ export default function SystemMenuPage() {
         </div>
       </header>
 
-      <div className="toolbar">
-        <input
-          placeholder="Search by menu label or path"
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <Input
+          placeholder="메뉴명 또는 경로 검색"
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
           onKeyDown={(event) => {
@@ -200,17 +196,22 @@ export default function SystemMenuPage() {
               void handleSearch();
             }
           }}
+          className="w-72"
         />
-        <button type="button" className="ghost" onClick={() => void handleSearch()} disabled={isLoading}>조회</button>
-        <button type="button" onClick={openCreate} disabled={isSubmitting}>입력</button>
-        <button
+        <Button type="button" variant="outline" onClick={() => void handleSearch()} disabled={isLoading}>
+          조회
+        </Button>
+        <Button type="button" onClick={openCreate} disabled={isSubmitting}>
+          입력
+        </Button>
+        <Button
           type="button"
-          className="danger"
+          variant="destructive"
           onClick={() => void deleteByIds([...selectedIds])}
           disabled={selectedCount === 0 || isSubmitting}
         >
           선택삭제 ({selectedCount})
-        </button>
+        </Button>
       </div>
 
       <p className="status-text">{statusText}</p>

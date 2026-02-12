@@ -1,6 +1,17 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/features/auth/auth-context";
 import { manageAttendanceApi } from "@/features/manage-attendance/api";
 import type { AttendanceDraft, AttendanceRecord, CodeOption } from "@/features/manage-attendance/types";
@@ -59,7 +70,7 @@ export default function ManageAttendancePage() {
   const [editor, setEditor] = useState<AttendanceEditorState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusText, setStatusText] = useState("Load attendance data to begin.");
+  const [statusText, setStatusText] = useState("근태 데이터를 불러오세요.");
 
   const visibleRows = useMemo(() => {
     const q = keyword.trim().toLowerCase();
@@ -72,10 +83,7 @@ export default function ManageAttendancePage() {
     });
   }, [keyword, rows]);
 
-  const selectedRows = useMemo(
-    () => rows.filter((row) => selectedIds.has(row.id)),
-    [rows, selectedIds],
-  );
+  const selectedRows = useMemo(() => rows.filter((row) => selectedIds.has(row.id)), [rows, selectedIds]);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -137,7 +145,7 @@ export default function ManageAttendancePage() {
       setEditor(null);
       await load();
     } catch (saveError) {
-      const message = saveError instanceof Error ? saveError.message : "Save에 실패했습니다.";
+      const message = saveError instanceof Error ? saveError.message : "Failed to save attendance.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -146,10 +154,10 @@ export default function ManageAttendancePage() {
 
   const deleteRows = async (targetRows: AttendanceRecord[]) => {
     if (targetRows.length === 0) {
-      setStatusText("Select at least one attendance row.");
+      setStatusText("근태 행을 하나 이상 선택하세요.");
       return;
     }
-    const confirmed = window.confirm(`Delete ${targetRows.length} attendance row(s)?`);
+    const confirmed = window.confirm(`근태 데이터 ${targetRows.length}건을 삭제할까요?`);
     if (!confirmed) {
       return;
     }
@@ -170,7 +178,7 @@ export default function ManageAttendancePage() {
       setStatusText(`Deleted ${succeeded}, failed ${failed}.`);
       await load();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Delete에 실패했습니다.";
+      const message = error instanceof Error ? error.message : "Failed to delete attendance rows.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -197,240 +205,214 @@ export default function ManageAttendancePage() {
     setSelectedIds(new Set(visibleRows.map((row) => row.id)));
   };
 
+  const selectClassName =
+    "flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+
   return (
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>외주인력일정관리</h2>
-          <p className="subtle">외주인력 일정 조회/입력/수정/삭제 화면입니다.</p>
+          <h2>외주인력 일정 관리</h2>
+          <p className="subtle">Attendance list/create/update/delete</p>
         </div>
       </header>
 
-      <div className="toolbar">
-        <input
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <Input
           placeholder="Filter by sabun, name, org"
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
+          className="w-72"
         />
-        <button type="button" className="ghost" onClick={() => void load()} disabled={isLoading}>
+        <Button type="button" variant="outline" onClick={() => void load()} disabled={isLoading}>
           Refresh
-        </button>
-        <button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft(user?.sabun ?? "") })}>입력</button>
-        <button
+        </Button>
+        <Button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft(user?.sabun ?? "") })}>입력</Button>
+        <Button
           type="button"
-          className="danger"
+          variant="destructive"
           onClick={() => void deleteRows(selectedRows)}
           disabled={selectedRows.length === 0 || isSubmitting}
-        >
-          선택삭제 ({selectedRows.length})
-        </button>
+        >선택삭제 ({selectedRows.length})
+        </Button>
       </div>
 
       <p className="status-text">{statusText}</p>
 
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead>
                 <input
                   type="checkbox"
                   checked={visibleRows.length > 0 && visibleRows.every((row) => selectedIds.has(row.id))}
                   onChange={(event) => toggleAllVisible(event.target.checked)}
                 />
-              </th>
-              <th>Sabun</th>
-              <th>Name</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Type</th>
-              <th>Status</th>
-              <th>Apply Date</th>
-              <th>Org</th>
-              <th>Note</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+              </TableHead>
+              <TableHead>사번</TableHead>
+              <TableHead>이름</TableHead>
+              <TableHead>시작일</TableHead>
+              <TableHead>종료일</TableHead>
+              <TableHead>유형</TableHead>
+              <TableHead>상태</TableHead>
+              <TableHead>적용일</TableHead>
+              <TableHead>조직</TableHead>
+              <TableHead>비고</TableHead>
+              <TableHead>작업</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {visibleRows.map((row) => (
-              <tr key={rowKey(row)}>
-                <td>
+              <TableRow key={rowKey(row)}>
+                <TableCell>
                   <input
                     type="checkbox"
                     checked={selectedIds.has(row.id)}
                     onChange={(event) => toggleOne(row.id, event.target.checked)}
                   />
-                </td>
-                <td>{row.sabun}</td>
-                <td>{row.name ?? "-"}</td>
-                <td>{formatYmd(row.sdate)}</td>
-                <td>{formatYmd(row.edate)}</td>
-                <td>{row.gntCdName ?? row.gntCd ?? "-"}</td>
-                <td>{row.statusCdName ?? row.statusCd ?? "-"}</td>
-                <td>{formatYmd(row.applyDate)}</td>
-                <td>{row.orgNm ?? "-"}</td>
-                <td>{row.note ?? "-"}</td>
-                <td className="row-actions">
-                  <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>수정</button>
-                  <button type="button" className="danger" onClick={() => void deleteRows([row])}>삭제</button>
-                </td>
-              </tr>
+                </TableCell>
+                <TableCell>{row.sabun}</TableCell>
+                <TableCell>{row.name ?? "-"}</TableCell>
+                <TableCell>{formatYmd(row.sdate)}</TableCell>
+                <TableCell>{formatYmd(row.edate)}</TableCell>
+                <TableCell>{row.gntCdName ?? row.gntCd ?? "-"}</TableCell>
+                <TableCell>{row.statusCdName ?? row.statusCd ?? "-"}</TableCell>
+                <TableCell>{formatYmd(row.applyDate)}</TableCell>
+                <TableCell>{row.orgNm ?? "-"}</TableCell>
+                <TableCell>{row.note ?? "-"}</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>수정</Button>
+                    <Button type="button" variant="destructive" size="sm" onClick={() => void deleteRows([row])}>삭제</Button>
+                  </div>
+                </TableCell>
+              </TableRow>
             ))}
             {!isLoading && visibleRows.length === 0 && (
-              <tr>
-                <td colSpan={11} className="empty-row">
-                  No attendance rows found.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={11} className="py-8 text-center text-slate-500">
+                  조회된 근태 데이터가 없습니다.
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {editor && (
-        <div className="modal-backdrop">
-          <div className="modal-card">
-            <header className="modal-header">
-              <h3>{editor.mode === "create" ? "일정 입력" : "일정 수정"}</h3>
-            </header>
+        <Dialog open onOpenChange={(open) => !open && setEditor(null)}>
+          <DialogContent aria-label={editor.mode === "create" ? "근태 입력" : "근태 수정"}>
+            <DialogHeader>
+              <DialogTitle>{editor.mode === "create" ? "근태 입력" : "근태 수정"}</DialogTitle>
+            </DialogHeader>
 
-            <div className="form-grid">
-              <label>
-                <span>Sabun</span>
-                <input
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-1.5">
+                <Label>Sabun *</Label>
+                <Input
                   value={editor.draft.sabun}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current
-                        ? {
-                            ...current,
-                            draft: { ...current.draft, sabun: event.target.value },
-                          }
-                        : current,
+                      current ? { ...current, draft: { ...current.draft, sabun: event.target.value } } : current,
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Start Date (YYYYMMDD)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Start Date (YYYYMMDD) *</Label>
+                <Input
                   value={editor.draft.sdate}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current
-                        ? {
-                            ...current,
-                            draft: { ...current.draft, sdate: event.target.value },
-                          }
-                        : current,
+                      current ? { ...current, draft: { ...current.draft, sdate: event.target.value } } : current,
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>End Date (YYYYMMDD)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>End Date (YYYYMMDD) *</Label>
+                <Input
                   value={editor.draft.edate}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current
-                        ? {
-                            ...current,
-                            draft: { ...current.draft, edate: event.target.value },
-                          }
-                        : current,
+                      current ? { ...current, draft: { ...current.draft, edate: event.target.value } } : current,
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Type</span>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Type</Label>
                 <select
+                  className={selectClassName}
                   value={editor.draft.gntCd}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current
-                        ? {
-                            ...current,
-                            draft: { ...current.draft, gntCd: event.target.value },
-                          }
-                        : current,
+                      current ? { ...current, draft: { ...current.draft, gntCd: event.target.value } } : current,
                     )
                   }
                 >
-                  <option value="">Select type</option>
+                  <option value="">유형 선택</option>
                   {gntCodes.map((item) => (
                     <option key={item.code} value={item.code}>
                       {item.codeNm}
                     </option>
                   ))}
                 </select>
-              </label>
-              <label>
-                <span>Status</span>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Status</Label>
                 <select
+                  className={selectClassName}
                   value={editor.draft.statusCd}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current
-                        ? {
-                            ...current,
-                            draft: { ...current.draft, statusCd: event.target.value },
-                          }
-                        : current,
+                      current ? { ...current, draft: { ...current.draft, statusCd: event.target.value } } : current,
                     )
                   }
                 >
-                  <option value="">Select status</option>
+                  <option value="">상태 선택</option>
                   {statusCodes.map((item) => (
                     <option key={item.code} value={item.code}>
                       {item.codeNm}
                     </option>
                   ))}
                 </select>
-              </label>
-              <label>
-                <span>Apply Date (YYYYMMDD)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Apply Date (YYYYMMDD)</Label>
+                <Input
                   value={editor.draft.applyDate}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current
-                        ? {
-                            ...current,
-                            draft: { ...current.draft, applyDate: event.target.value },
-                          }
-                        : current,
+                      current ? { ...current, draft: { ...current.draft, applyDate: event.target.value } } : current,
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Note</span>
-                <input
+              </div>
+              <div className="grid gap-1.5 md:col-span-2">
+                <Label>Note</Label>
+                <Input
                   value={editor.draft.note}
                   onChange={(event) =>
                     setEditor((current) =>
-                      current
-                        ? {
-                            ...current,
-                            draft: { ...current.draft, note: event.target.value },
-                          }
-                        : current,
+                      current ? { ...current, draft: { ...current.draft, note: event.target.value } } : current,
                     )
                   }
                 />
-              </label>
+              </div>
             </div>
 
-            <div className="modal-actions">
-              <button type="button" className="ghost" onClick={() => setEditor(null)}>취소</button>
-              <button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</button>
-            </div>
-          </div>
-        </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditor(null)}>취소</Button>
+              <Button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </section>
   );
 }
+
+
 

@@ -1,6 +1,17 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { manageCompanyApi } from "@/features/manage-company/api";
 import type { ManageCompany, ManageCompanyDraft } from "@/features/manage-company/types";
 
@@ -57,16 +68,13 @@ export default function ManageCompanyPage() {
   const [editor, setEditor] = useState<CompanyEditorState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusText, setStatusText] = useState("Load company data to begin.");
+  const [statusText, setStatusText] = useState("고객사 데이터를 불러오세요.");
   const [page, setPage] = useState(0);
   const [size] = useState(25);
   const [totalElements, setTotalElements] = useState(0);
 
   const totalPages = useMemo(() => Math.max(Math.ceil(totalElements / size), 1), [size, totalElements]);
-  const selectedRows = useMemo(
-    () => rows.filter((row) => selectedKeys.has(rowKey(row))),
-    [rows, selectedKeys],
-  );
+  const selectedRows = useMemo(() => rows.filter((row) => selectedKeys.has(rowKey(row))), [rows, selectedKeys]);
 
   const loadRows = useCallback(
     async (nextPage: number, searchKeyword: string) => {
@@ -135,7 +143,7 @@ export default function ManageCompanyPage() {
       setEditor(null);
       await loadRows(page, query);
     } catch (saveError) {
-      const message = saveError instanceof Error ? saveError.message : "Save에 실패했습니다.";
+      const message = saveError instanceof Error ? saveError.message : "Failed to save company.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -144,10 +152,10 @@ export default function ManageCompanyPage() {
 
   const deleteRows = async (targetRows: ManageCompany[]) => {
     if (targetRows.length === 0) {
-      setStatusText("Select at least one company row.");
+      setStatusText("고객사 행을 하나 이상 선택하세요.");
       return;
     }
-    const confirmed = window.confirm(`Delete ${targetRows.length} company row(s)?`);
+    const confirmed = window.confirm(`고객사 데이터 ${targetRows.length}건을 삭제할까요?`);
     if (!confirmed) {
       return;
     }
@@ -159,7 +167,7 @@ export default function ManageCompanyPage() {
       setStatusText(`Deleted ${response.succeeded}, failed ${response.failed}.`);
       await loadRows(page, query);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Delete에 실패했습니다.";
+      const message = error instanceof Error ? error.message : "Failed to delete company rows.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -190,13 +198,13 @@ export default function ManageCompanyPage() {
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>고객사관리</h2>
-          <p className="subtle">고객사 조회/입력/수정/삭제 화면입니다.</p>
+          <h2>고객사 관리</h2>
+          <p className="subtle">Company list/create/update/delete</p>
         </div>
       </header>
 
-      <div className="toolbar">
-        <input
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <Input
           placeholder="Company code or name"
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
@@ -206,120 +214,118 @@ export default function ManageCompanyPage() {
               setQuery(keyword.trim());
             }
           }}
+          className="w-56"
         />
-        <button
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
           onClick={() => {
             setPage(0);
             setQuery(keyword.trim());
           }}
           disabled={isLoading}
-        >조회</button>
-        <button type="button" onClick={openCreate} disabled={isSubmitting}>입력</button>
-        <button
+        >조회</Button>
+        <Button type="button" onClick={openCreate} disabled={isSubmitting}>입력</Button>
+        <Button
           type="button"
-          className="danger"
+          variant="destructive"
           onClick={() => void deleteRows(selectedRows)}
           disabled={selectedRows.length === 0 || isSubmitting}
-        >
-          선택삭제 ({selectedRows.length})
-        </button>
+        >선택삭제 ({selectedRows.length})
+        </Button>
       </div>
 
       <p className="status-text">{statusText}</p>
 
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead>
                 <input
                   type="checkbox"
                   checked={rows.length > 0 && selectedRows.length === rows.length}
                   onChange={(event) => toggleAll(event.target.checked)}
                 />
-              </th>
-              <th>Company Code</th>
-              <th>Company Name</th>
-              <th>Group Code</th>
-              <th>Object Div</th>
-              <th>Manage Div</th>
-              <th>Representative</th>
-              <th>Start Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+              </TableHead>
+              <TableHead>고객사 코드</TableHead>
+              <TableHead>고객사명</TableHead>
+              <TableHead>그룹 코드</TableHead>
+              <TableHead>객체 구분</TableHead>
+              <TableHead>관리 구분</TableHead>
+              <TableHead>대표사</TableHead>
+              <TableHead>시작일</TableHead>
+              <TableHead>작업</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.map((row) => {
               const key = rowKey(row);
               return (
-                <tr key={key}>
-                  <td>
+                <TableRow key={key}>
+                  <TableCell>
                     <input
                       type="checkbox"
                       checked={selectedKeys.has(key)}
                       onChange={(event) => toggleOne(key, event.target.checked)}
                     />
-                  </td>
-                  <td>{row.companyCd}</td>
-                  <td>{row.companyNm}</td>
-                  <td>{row.companyGrpCd ?? "-"}</td>
-                  <td>{row.objectDiv ?? "-"}</td>
-                  <td>{row.manageDiv ?? "-"}</td>
-                  <td>{row.representCompany ?? "-"}</td>
-                  <td>{formatYmd(row.sdate)}</td>
-                  <td className="row-actions">
-                    <button type="button" className="ghost" onClick={() => openEdit(row)}>수정</button>
-                    <button type="button" className="danger" onClick={() => void deleteRows([row])}>삭제</button>
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell>{row.companyCd}</TableCell>
+                  <TableCell>{row.companyNm}</TableCell>
+                  <TableCell>{row.companyGrpCd ?? "-"}</TableCell>
+                  <TableCell>{row.objectDiv ?? "-"}</TableCell>
+                  <TableCell>{row.manageDiv ?? "-"}</TableCell>
+                  <TableCell>{row.representCompany ?? "-"}</TableCell>
+                  <TableCell>{formatYmd(row.sdate)}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => openEdit(row)}>수정</Button>
+                      <Button type="button" variant="destructive" size="sm" onClick={() => void deleteRows([row])}>삭제</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               );
             })}
             {!isLoading && rows.length === 0 && (
-              <tr>
-                <td colSpan={9} className="empty-row">
-                  No company rows found.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={9} className="py-8 text-center text-slate-500">
+                  조회된 고객사 데이터가 없습니다.
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       <div className="pagination">
-        <button
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
           onClick={() => setPage((current) => Math.max(current - 1, 0))}
           disabled={page === 0 || isLoading}
-        >
-          Prev
-        </button>
+        >이전</Button>
         <span>
-          Page {page + 1} / {totalPages}
+          페이지 {page + 1} / {totalPages}
         </span>
-        <button
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
           onClick={() => setPage((current) => Math.min(current + 1, totalPages - 1))}
           disabled={page >= totalPages - 1 || isLoading}
-        >
-          Next
-        </button>
+        >다음</Button>
       </div>
 
       {editor && (
-        <div className="modal-backdrop">
-          <div className="modal-card">
-            <header className="modal-header">
-              <h3>{editor.mode === "create" ? "고객사 입력" : "고객사 수정"}</h3>
-            </header>
+        <Dialog open onOpenChange={(open) => !open && setEditor(null)}>
+          <DialogContent className="max-w-4xl" aria-label={editor.mode === "create" ? "고객사 입력" : "고객사 수정"}>
+            <DialogHeader>
+              <DialogTitle>{editor.mode === "create" ? "고객사 입력" : "고객사 수정"}</DialogTitle>
+            </DialogHeader>
 
-            <div className="form-grid">
-              <label>
-                <span>Company Code</span>
-                <input
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-1.5">
+                <Label>Company Code *</Label>
+                <Input
                   value={editor.draft.companyCd}
                   disabled={editor.mode === "edit"}
                   onChange={(event) =>
@@ -336,10 +342,10 @@ export default function ManageCompanyPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Company Name</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Company Name *</Label>
+                <Input
                   value={editor.draft.companyNm}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -355,10 +361,10 @@ export default function ManageCompanyPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Group Code</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Group Code</Label>
+                <Input
                   value={editor.draft.companyGrpCd}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -374,10 +380,10 @@ export default function ManageCompanyPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Object Div</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Object Div</Label>
+                <Input
                   value={editor.draft.objectDiv}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -393,10 +399,10 @@ export default function ManageCompanyPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Manage Div</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Manage Div</Label>
+                <Input
                   value={editor.draft.manageDiv}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -412,10 +418,10 @@ export default function ManageCompanyPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Representative</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Representative</Label>
+                <Input
                   value={editor.draft.representCompany}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -431,10 +437,10 @@ export default function ManageCompanyPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Start Date (YYYYMMDD)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Start Date (YYYYMMDD)</Label>
+                <Input
                   value={editor.draft.sdate}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -450,10 +456,10 @@ export default function ManageCompanyPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Industry Code</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Industry Code</Label>
+                <Input
                   value={editor.draft.indutyCd}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -469,10 +475,10 @@ export default function ManageCompanyPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Zip</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Zip</Label>
+                <Input
                   value={editor.draft.zip}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -488,10 +494,10 @@ export default function ManageCompanyPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Address</span>
-                <input
+              </div>
+              <div className="grid gap-1.5 md:col-span-2">
+                <Label>Address</Label>
+                <Input
                   value={editor.draft.address}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -507,10 +513,10 @@ export default function ManageCompanyPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Homepage</span>
-                <input
+              </div>
+              <div className="grid gap-1.5 md:col-span-2">
+                <Label>Homepage</Label>
+                <Input
                   value={editor.draft.homepage}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -526,17 +532,19 @@ export default function ManageCompanyPage() {
                     )
                   }
                 />
-              </label>
+              </div>
             </div>
 
-            <div className="modal-actions">
-              <button type="button" className="ghost" onClick={() => setEditor(null)}>취소</button>
-              <button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</button>
-            </div>
-          </div>
-        </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditor(null)}>취소</Button>
+              <Button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </section>
   );
 }
+
+
 

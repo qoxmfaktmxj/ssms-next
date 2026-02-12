@@ -1,5 +1,15 @@
-"use client";
+﻿"use client";
 
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { CodeDraft, CodeEditorState } from "@/features/system-code/types";
 
 type CodeEditorDialogProps = {
@@ -17,6 +27,9 @@ export const CodeEditorDialog = ({
   onSubmit,
   isSubmitting,
 }: CodeEditorDialogProps) => {
+  const selectClassName =
+    "flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+
   const update = (key: keyof CodeDraft, value: string) => {
     onChange({
       ...state.draft,
@@ -27,63 +40,76 @@ export const CodeEditorDialog = ({
   const title = state.mode === "create" ? "공통코드 입력" : "공통코드 수정";
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="modal-card">
-        <header className="modal-header">
-          <h3>{title}</h3>
-        </header>
-        <div className="form-grid">
-          <label>
-            <span>Group Code *</span>
-            <input
+    <Dialog open onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent aria-label={title}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-1.5">
+            <Label>그룹 코드 *</Label>
+            <Input
               value={state.draft.grcodeCd}
               onChange={(event) => update("grcodeCd", event.target.value)}
               disabled={state.mode === "edit"}
             />
-          </label>
-          <label>
-            <span>Code *</span>
-            <input
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label>코드 *</Label>
+            <Input
               value={state.draft.code}
               onChange={(event) => update("code", event.target.value)}
               disabled={state.mode === "edit"}
             />
-          </label>
-          <label>
-            <span>Code Name *</span>
-            <input value={state.draft.codeNm} onChange={(event) => update("codeNm", event.target.value)} />
-          </label>
-          <label>
-            <span>English Name</span>
-            <input
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label>코드명 *</Label>
+            <Input value={state.draft.codeNm} onChange={(event) => update("codeNm", event.target.value)} />
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label>영문명</Label>
+            <Input
               value={state.draft.codeEngNm}
               onChange={(event) => update("codeEngNm", event.target.value)}
             />
-          </label>
-          <label>
-            <span>Sequence</span>
-            <input value={state.draft.seq} onChange={(event) => update("seq", event.target.value)} />
-          </label>
-          <label>
-            <span>Use</span>
-            <select value={state.draft.useYn} onChange={(event) => update("useYn", event.target.value)}>
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label>순번</Label>
+            <Input value={state.draft.seq} onChange={(event) => update("seq", event.target.value)} />
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label>사용 여부</Label>
+            <select
+              className={selectClassName}
+              value={state.draft.useYn}
+              onChange={(event) => update("useYn", event.target.value)}
+            >
               <option value="Y">Y</option>
               <option value="N">N</option>
             </select>
-          </label>
-          <label>
-            <span>ERP Code</span>
-            <input value={state.draft.erpCode} onChange={(event) => update("erpCode", event.target.value)} />
-          </label>
+          </div>
+
+          <div className="grid gap-1.5 md:col-span-2">
+            <Label>ERP 코드</Label>
+            <Input value={state.draft.erpCode} onChange={(event) => update("erpCode", event.target.value)} />
+          </div>
         </div>
-        <footer className="modal-actions">
-          <button type="button" className="ghost" onClick={onCancel}>취소</button>
-          <button type="button" onClick={() => void onSubmit()} disabled={isSubmitting}>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onCancel}>
+            취소
+          </Button>
+          <Button type="button" onClick={() => void onSubmit()} disabled={isSubmitting}>
             {isSubmitting ? "저장 중..." : "저장"}
-          </button>
-        </footer>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
-

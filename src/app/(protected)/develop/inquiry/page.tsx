@@ -1,6 +1,17 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { developInquiryApi } from "@/features/develop-inquiry/api";
 import type { DevelopInquiry, DevelopInquiryDraft } from "@/features/develop-inquiry/types";
 import { manageCompanyApi } from "@/features/manage-company/api";
@@ -61,12 +72,9 @@ export default function DevelopInquiryPage() {
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusText, setStatusText] = useState("Load inquiry data to begin.");
+  const [statusText, setStatusText] = useState("문의 데이터를 불러오세요.");
 
-  const selectedRows = useMemo(
-    () => rows.filter((row) => selectedKeys.has(rowKey(row))),
-    [rows, selectedKeys],
-  );
+  const selectedRows = useMemo(() => rows.filter((row) => selectedKeys.has(rowKey(row))), [rows, selectedKeys]);
 
   const loadRows = useCallback(async (nextQuery: { keyword: string; inProceedCode: string }) => {
     setIsLoading(true);
@@ -130,7 +138,7 @@ export default function DevelopInquiryPage() {
       setEditor(null);
       await loadRows(query);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Save에 실패했습니다.";
+      const message = error instanceof Error ? error.message : "Failed to save inquiry.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -139,10 +147,10 @@ export default function DevelopInquiryPage() {
 
   const deleteRows = async (targets: DevelopInquiry[]) => {
     if (targets.length === 0) {
-      setStatusText("Select at least one row.");
+      setStatusText("행을 하나 이상 선택하세요.");
       return;
     }
-    const confirmed = window.confirm(`Delete ${targets.length} inquiry row(s)?`);
+    const confirmed = window.confirm(`문의 데이터 ${targets.length}건을 삭제할까요?`);
     if (!confirmed) {
       return;
     }
@@ -153,7 +161,7 @@ export default function DevelopInquiryPage() {
       setStatusText(`Deleted ${response.succeeded}, failed ${response.failed}.`);
       await loadRows(query);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Delete에 실패했습니다.";
+      const message = error instanceof Error ? error.message : "Failed to delete inquiry rows.";
       setStatusText(message);
     } finally {
       setIsSubmitting(false);
@@ -180,109 +188,115 @@ export default function DevelopInquiryPage() {
     setSelectedKeys(new Set(rows.map((row) => rowKey(row))));
   };
 
+  const selectClassName =
+    "flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+
   return (
     <section className="panel">
       <header className="section-head">
         <div>
-          <h2>추가개발문의관리</h2>
-          <p className="subtle">추가개발 문의 조회/입력/수정/삭제 화면입니다.</p>
+          <h2>추가개발 문의 관리</h2>
+          <p className="subtle">Inquiry list/create/update/delete</p>
         </div>
       </header>
 
-      <div className="toolbar">
-        <input placeholder="Keyword" value={keyword} onChange={(event) => setKeyword(event.target.value)} />
-        <input
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <Input placeholder="Keyword" value={keyword} onChange={(event) => setKeyword(event.target.value)} className="w-48" />
+        <Input
           placeholder="Proceed code"
           value={inProceedCode}
           onChange={(event) => setInProceedCode(event.target.value)}
+          className="w-40"
         />
-        <button
+        <Button
           type="button"
-          className="ghost"
+          variant="outline"
           onClick={() => setQuery({ keyword: keyword.trim(), inProceedCode: inProceedCode.trim() })}
           disabled={isLoading}
-        >조회</button>
-        <button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft() })}>입력</button>
-        <button
+        >조회</Button>
+        <Button type="button" onClick={() => setEditor({ mode: "create", draft: emptyDraft() })}>입력</Button>
+        <Button
           type="button"
-          className="danger"
+          variant="destructive"
           onClick={() => void deleteRows(selectedRows)}
           disabled={selectedRows.length === 0 || isSubmitting}
-        >
-          선택삭제 ({selectedRows.length})
-        </button>
+        >선택삭제 ({selectedRows.length})
+        </Button>
       </div>
 
       <p className="status-text">{statusText}</p>
 
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead>
                 <input
                   type="checkbox"
                   checked={rows.length > 0 && selectedRows.length === rows.length}
                   onChange={(event) => toggleAll(event.target.checked)}
                 />
-              </th>
-              <th>Inquiry ID</th>
-              <th>Company</th>
-              <th>Content</th>
-              <th>Hope Date</th>
-              <th>Proceed</th>
-              <th>Confirm</th>
-              <th>Project</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+              </TableHead>
+              <TableHead>문의 ID</TableHead>
+              <TableHead>고객사</TableHead>
+              <TableHead>내용</TableHead>
+              <TableHead>희망일</TableHead>
+              <TableHead>진행</TableHead>
+              <TableHead>확인</TableHead>
+              <TableHead>프로젝트</TableHead>
+              <TableHead>작업</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.map((row) => {
               const key = rowKey(row);
               return (
-                <tr key={key}>
-                  <td>
+                <TableRow key={key}>
+                  <TableCell>
                     <input
                       type="checkbox"
                       checked={selectedKeys.has(key)}
                       onChange={(event) => toggleOne(key, event.target.checked)}
                     />
-                  </td>
-                  <td>{row.inSeq}</td>
-                  <td>{row.requestCompanyNm ?? row.requestCompanyCd}</td>
-                  <td>{row.inContent}</td>
-                  <td>{formatYmd(row.proceedHopeDt)}</td>
-                  <td>{row.inProceedNm ?? row.inProceedCode ?? "-"}</td>
-                  <td>{row.confirmNm ?? row.confirmYn ?? "-"}</td>
-                  <td>{row.projectNm ?? "-"}</td>
-                  <td className="row-actions">
-                    <button type="button" className="ghost" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>수정</button>
-                    <button type="button" className="danger" onClick={() => void deleteRows([row])}>삭제</button>
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell>{row.inSeq}</TableCell>
+                  <TableCell>{row.requestCompanyNm ?? row.requestCompanyCd}</TableCell>
+                  <TableCell>{row.inContent}</TableCell>
+                  <TableCell>{formatYmd(row.proceedHopeDt)}</TableCell>
+                  <TableCell>{row.inProceedNm ?? row.inProceedCode ?? "-"}</TableCell>
+                  <TableCell>{row.confirmNm ?? row.confirmYn ?? "-"}</TableCell>
+                  <TableCell>{row.projectNm ?? "-"}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => setEditor({ mode: "edit", draft: toDraft(row) })}>수정</Button>
+                      <Button type="button" variant="destructive" size="sm" onClick={() => void deleteRows([row])}>삭제</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               );
             })}
             {!isLoading && rows.length === 0 && (
-              <tr>
-                <td colSpan={9} className="empty-row">
-                  No inquiry rows found.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={9} className="py-8 text-center text-slate-500">
+                  조회된 문의 데이터가 없습니다.
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {editor && (
-        <div className="modal-backdrop">
-          <div className="modal-card">
-            <header className="modal-header">
-              <h3>{editor.mode === "create" ? "문의 입력" : "문의 수정"}</h3>
-            </header>
-            <div className="form-grid">
-              <label>
-                <span>Company</span>
+        <Dialog open onOpenChange={(open) => !open && setEditor(null)}>
+          <DialogContent className="max-w-4xl" aria-label={editor.mode === "create" ? "문의 입력" : "문의 수정"}>
+            <DialogHeader>
+              <DialogTitle>{editor.mode === "create" ? "문의 입력" : "문의 수정"}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-1.5">
+                <Label>Company *</Label>
                 <select
+                  className={selectClassName}
                   value={editor.draft.requestCompanyCd}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -298,17 +312,17 @@ export default function DevelopInquiryPage() {
                     )
                   }
                 >
-                  <option value="">Select company</option>
+                  <option value="">회사 선택</option>
                   {companies.map((company) => (
                     <option key={company.companyCd} value={company.companyCd}>
                       {company.companyCd} - {company.companyNm}
                     </option>
                   ))}
                 </select>
-              </label>
-              <label>
-                <span>Inquiry Content</span>
-                <input
+              </div>
+              <div className="grid gap-1.5 md:col-span-2">
+                <Label>Inquiry Content *</Label>
+                <Input
                   value={editor.draft.inContent}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -324,10 +338,10 @@ export default function DevelopInquiryPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Proceed Hope Date (YYYYMMDD)</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Proceed Hope Date (YYYYMMDD)</Label>
+                <Input
                   value={editor.draft.proceedHopeDt}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -343,10 +357,10 @@ export default function DevelopInquiryPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Estimated MM</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Estimated MM</Label>
+                <Input
                   value={editor.draft.estRealMm}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -362,10 +376,10 @@ export default function DevelopInquiryPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Sales Name</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Sales Name</Label>
+                <Input
                   value={editor.draft.salesNm}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -381,10 +395,10 @@ export default function DevelopInquiryPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Charge Name</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Charge Name</Label>
+                <Input
                   value={editor.draft.chargeNm}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -400,10 +414,10 @@ export default function DevelopInquiryPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Proceed Code</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Proceed Code</Label>
+                <Input
                   value={editor.draft.inProceedCode}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -419,10 +433,11 @@ export default function DevelopInquiryPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Confirm (Y/N)</span>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Confirm</Label>
                 <select
+                  className={selectClassName}
                   value={editor.draft.confirmYn}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -441,10 +456,10 @@ export default function DevelopInquiryPage() {
                   <option value="N">N</option>
                   <option value="Y">Y</option>
                 </select>
-              </label>
-              <label>
-                <span>Project Name</span>
-                <input
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Project Name</Label>
+                <Input
                   value={editor.draft.projectNm}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -460,10 +475,10 @@ export default function DevelopInquiryPage() {
                     )
                   }
                 />
-              </label>
-              <label>
-                <span>Remark</span>
-                <input
+              </div>
+              <div className="grid gap-1.5 md:col-span-2">
+                <Label>Remark</Label>
+                <Input
                   value={editor.draft.remark}
                   onChange={(event) =>
                     setEditor((current) =>
@@ -479,16 +494,17 @@ export default function DevelopInquiryPage() {
                     )
                   }
                 />
-              </label>
+              </div>
             </div>
-            <div className="modal-actions">
-              <button type="button" className="ghost" onClick={() => setEditor(null)}>취소</button>
-              <button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</button>
-            </div>
-          </div>
-        </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditor(null)}>취소</Button>
+              <Button type="button" onClick={() => void save()} disabled={isSubmitting}>저장</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </section>
   );
 }
+
 

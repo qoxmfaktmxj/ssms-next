@@ -1,5 +1,8 @@
-"use client";
+﻿"use client";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { SystemUser } from "@/features/system-user/types";
 
 type UserTableProps = {
@@ -24,66 +27,74 @@ export const UserTable = ({
   const allSelected = rows.length > 0 && rows.every((row) => selectedSabuns.has(row.sabun));
 
   return (
-    <div className="table-wrap">
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+            <TableHead>
               <input
                 type="checkbox"
                 checked={allSelected}
                 onChange={(event) => onToggleAll(event.target.checked)}
               />
-            </th>
-            <th>Sabun</th>
-            <th>Name</th>
-            <th>Org</th>
-            <th>Role</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Use</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+            </TableHead>
+            <TableHead>사번</TableHead>
+            <TableHead>이름</TableHead>
+            <TableHead>조직</TableHead>
+            <TableHead>권한</TableHead>
+            <TableHead>이메일</TableHead>
+            <TableHead>전화번호</TableHead>
+            <TableHead>사용</TableHead>
+            <TableHead>작업</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {rows.length === 0 ? (
-            <tr>
-              <td colSpan={9} className="empty-row">
-                User 데이터가 없습니다.
-              </td>
-            </tr>
+            <TableRow>
+              <TableCell colSpan={9} className="py-8 text-center text-slate-500">
+                조회된 사용자 데이터가 없습니다.
+              </TableCell>
+            </TableRow>
           ) : (
             rows.map((row) => (
-              <tr key={`${row.enterCd}-${row.sabun}`}>
-                <td>
+              <TableRow key={`${row.enterCd}-${row.sabun}`}>
+                <TableCell>
                   <input
                     type="checkbox"
                     checked={selectedSabuns.has(row.sabun)}
                     onChange={(event) => onToggleOne(row.sabun, event.target.checked)}
                   />
-                </td>
-                <td>{row.sabun}</td>
-                <td>{row.name}</td>
-                <td>{row.orgNm}</td>
-                <td>{row.roleCd}</td>
-                <td>{row.mailId ?? "-"}</td>
-                <td>{row.handPhone ?? "-"}</td>
-                <td>
-                  <span className={row.useYn === "Y" ? "badge green" : "badge red"}>{row.useYn}</span>
-                </td>
-                <td className="row-actions">
-                  <button type="button" className="ghost" onClick={() => onEdit(row)}>수정</button>
-                  <button type="button" className="danger" onClick={() => onDelete(row)}>삭제</button>
-                  <button type="button" className="ghost" onClick={() => onResetPassword(row)}>
-                    비밀번호초기화
-                  </button>
-                </td>
-              </tr>
+                </TableCell>
+                <TableCell>{row.sabun}</TableCell>
+                <TableCell>{row.name}</TableCell>
+                <TableCell>{row.orgNm}</TableCell>
+                <TableCell>{row.roleCd}</TableCell>
+                <TableCell>{row.mailId ?? "-"}</TableCell>
+                <TableCell>{row.handPhone ?? "-"}</TableCell>
+                <TableCell>
+                  <Badge variant={row.useYn === "Y" ? "success" : "destructive"}>{row.useYn}</Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => onEdit(row)}>
+                      수정
+                    </Button>
+                    <Button type="button" variant="destructive" size="sm" onClick={() => onDelete(row)}>
+                      삭제
+                    </Button>
+                    <Button type="button" variant="secondary" size="sm" onClick={() => onResetPassword(row)}>
+                      비밀번호 초기화
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
             ))
           )}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 };
+
+
 

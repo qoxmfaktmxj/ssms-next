@@ -1,6 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { systemQuickMenuApi } from "@/features/system-quick-menu/api";
 import { CandidateTable } from "@/features/system-quick-menu/candidate-table";
 import { SelectedTable } from "@/features/system-quick-menu/selected-table";
@@ -29,7 +31,7 @@ export default function SystemQuickMenuPage() {
   const [selectedQuickMenuId, setSelectedQuickMenuId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [statusText, setStatusText] = useState("퀵 Load menu data to begin.");
+  const [statusText, setStatusText] = useState("메뉴 데이터를 불러오세요.");
   const [page, setPage] = useState(0);
   const [size] = useState(20);
   const [totalElements, setTotalElements] = useState(0);
@@ -53,14 +55,14 @@ export default function SystemQuickMenuPage() {
   const loadAll = useCallback(
     async (nextPage: number, appliedQuery: string) => {
       setIsLoading(true);
-      setStatusText("Loading quick menu data...");
+      setStatusText("바로가기 메뉴 조회 중...");
       try {
         const [quickResponse] = await Promise.all([systemQuickMenuApi.list(), loadCandidates(nextPage, appliedQuery)]);
         setQuickMenus(toSequential(quickResponse.content ?? []));
         setSelectedQuickMenuId(null);
-        setStatusText("Quick menu data loaded.");
+        setStatusText("바로가기 메뉴 데이터를 불러왔습니다.");
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load quick menu data.";
+        const message = error instanceof Error ? error.message : "바로가기 메뉴 조회에 실패했습니다.";
         setStatusText(message);
       } finally {
         setIsLoading(false);
@@ -78,7 +80,7 @@ export default function SystemQuickMenuPage() {
     const nextQuery = keyword.trim();
     setQuery(nextQuery);
     void loadCandidates(0, nextQuery).catch((error) => {
-      const message = error instanceof Error ? error.message : "Failed to load candidate menus.";
+      const message = error instanceof Error ? error.message : "후보 메뉴 조회에 실패했습니다.";
       setStatusText(message);
     });
   };
@@ -86,33 +88,30 @@ export default function SystemQuickMenuPage() {
   const addCandidate = (candidate: QuickMenuCandidate) => {
     setQuickMenus((current) => {
       if (current.some((item) => item.menuId === candidate.menuId)) {
-        setStatusText("Selected menu already exists in quick menu.");
+        setStatusText("이미 바로가기 메뉴에 등록된 항목입니다.");
         return current;
       }
       const next = [...current, toQuickItem(candidate, current.length + 1)];
-      setStatusText(`Added "${candidate.menuLabel}" to quick menu.`);
+      setStatusText(`"${candidate.menuLabel}" 메뉴를 추가했습니다.`);
       return next;
     });
   };
 
   const addSelectedCandidate = () => {
     if (selectedCandidateId == null) {
-      setStatusText("Select one candidate menu first.");
+      setStatusText("후보 메뉴를 먼저 선택하세요.");
       return;
     }
     const selectedCandidate = candidates.find((item) => item.menuId === selectedCandidateId);
     if (!selectedCandidate) {
-      setStatusText("Selected candidate no longer exists.");
+      setStatusText("선택한 후보 메뉴를 찾을 수 없습니다.");
       return;
     }
     addCandidate(selectedCandidate);
   };
 
   const removeByMenuId = (menuId: number) => {
-    setQuickMenus((current) => {
-      const next = toSequential(current.filter((item) => item.menuId !== menuId));
-      return next;
-    });
+    setQuickMenus((current) => toSequential(current.filter((item) => item.menuId !== menuId)));
     if (selectedQuickMenuId === menuId) {
       setSelectedQuickMenuId(null);
     }
@@ -120,7 +119,7 @@ export default function SystemQuickMenuPage() {
 
   const moveSelected = (direction: -1 | 1) => {
     if (selectedQuickMenuId == null) {
-      setStatusText("Select one quick menu row first.");
+      setStatusText("바로가기 메뉴에서 이동할 행을 선택하세요.");
       return;
     }
     setQuickMenus((current) => {
@@ -141,14 +140,14 @@ export default function SystemQuickMenuPage() {
 
   const saveQuickMenus = async () => {
     setIsSaving(true);
-    setStatusText("Saving quick menu...");
+    setStatusText("바로가기 메뉴 저장 중...");
     try {
       const payload = quickMenus.map((item, index) => ({ menuId: item.menuId, seq: index + 1 }));
       const response = await systemQuickMenuApi.save(payload);
-      setStatusText(`Saved ${response.succeeded} item(s), failed ${response.failed}.`);
+      setStatusText(`저장 ${response.succeeded}건, 실패 ${response.failed}건`);
       await loadAll(page, query);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to save quick menu.";
+      const message = error instanceof Error ? error.message : "바로가기 메뉴 저장에 실패했습니다.";
       setStatusText(message);
     } finally {
       setIsSaving(false);
@@ -156,19 +155,19 @@ export default function SystemQuickMenuPage() {
   };
 
   const clearQuickMenus = async () => {
-    const confirmed = window.confirm("Delete all quick menu entries?");
+    const confirmed = window.confirm("바로가기 메뉴를 모두 삭제할까요?");
     if (!confirmed) {
       return;
     }
     setIsSaving(true);
-    setStatusText("Clearing quick menu...");
+    setStatusText("바로가기 메뉴 초기화 중...");
     try {
       const response = await systemQuickMenuApi.clear();
       setQuickMenus([]);
       setSelectedQuickMenuId(null);
-      setStatusText(`Deleted ${response.succeeded} item(s).`);
+      setStatusText(`삭제 ${response.succeeded}건`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to clear quick menu.";
+      const message = error instanceof Error ? error.message : "바로가기 메뉴 초기화에 실패했습니다.";
       setStatusText(message);
     } finally {
       setIsSaving(false);
@@ -184,9 +183,9 @@ export default function SystemQuickMenuPage() {
         </div>
       </header>
 
-      <div className="toolbar">
-        <input
-          placeholder="Search candidate menus"
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <Input
+          placeholder="후보 메뉴 검색"
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
           onKeyDown={(event) => {
@@ -194,28 +193,33 @@ export default function SystemQuickMenuPage() {
               applySearch();
             }
           }}
+          className="w-60"
         />
-        <button type="button" className="ghost" onClick={applySearch} disabled={isLoading}>조회</button>
-        <button type="button" className="ghost" onClick={addSelectedCandidate} disabled={isSaving}>
-          Add Selected
-        </button>
-        <button type="button" className="ghost" onClick={() => moveSelected(-1)} disabled={isSaving}>
-          Move Up
-        </button>
-        <button type="button" className="ghost" onClick={() => moveSelected(1)} disabled={isSaving}>
-          Move Down
-        </button>
-        <button type="button" onClick={() => void saveQuickMenus()} disabled={isSaving}>저장</button>
-        <button type="button" className="danger" onClick={() => void clearQuickMenus()} disabled={isSaving}>
-          Clear All
-        </button>
+        <Button type="button" variant="outline" onClick={applySearch} disabled={isLoading}>
+          조회
+        </Button>
+        <Button type="button" variant="outline" onClick={addSelectedCandidate} disabled={isSaving}>
+          선택추가
+        </Button>
+        <Button type="button" variant="outline" onClick={() => moveSelected(-1)} disabled={isSaving}>
+          위로
+        </Button>
+        <Button type="button" variant="outline" onClick={() => moveSelected(1)} disabled={isSaving}>
+          아래로
+        </Button>
+        <Button type="button" onClick={() => void saveQuickMenus()} disabled={isSaving}>
+          저장
+        </Button>
+        <Button type="button" variant="destructive" onClick={() => void clearQuickMenus()} disabled={isSaving}>
+          전체삭제
+        </Button>
       </div>
 
       <p className="status-text">{statusText}</p>
 
       <div className="quick-grid">
         <div className="quick-panel">
-          <h3>Candidate Menus</h3>
+          <h3>후보 메뉴</h3>
           <CandidateTable
             rows={candidates}
             selectedMenuId={selectedCandidateId}
@@ -223,38 +227,34 @@ export default function SystemQuickMenuPage() {
             onAdd={addCandidate}
           />
           <div className="pagination">
-            <button
+            <Button
               type="button"
-              className="ghost"
+              variant="outline"
               onClick={() => {
                 const nextPage = Math.max(page - 1, 0);
                 setPage(nextPage);
                 void loadCandidates(nextPage, query);
               }}
               disabled={page === 0 || isLoading}
-            >
-              Prev
-            </button>
+            >이전</Button>
             <span>
-              Page {page + 1} / {totalPages}
+              페이지 {page + 1} / {totalPages}
             </span>
-            <button
+            <Button
               type="button"
-              className="ghost"
+              variant="outline"
               onClick={() => {
                 const nextPage = Math.min(page + 1, totalPages - 1);
                 setPage(nextPage);
                 void loadCandidates(nextPage, query);
               }}
               disabled={page >= totalPages - 1 || isLoading}
-            >
-              Next
-            </button>
+            >다음</Button>
           </div>
         </div>
 
         <div className="quick-panel">
-          <h3>My Quick Menu</h3>
+          <h3>내 퀵메뉴</h3>
           <SelectedTable
             rows={quickMenus}
             selectedMenuId={selectedQuickMenuId}
@@ -266,4 +266,5 @@ export default function SystemQuickMenuPage() {
     </section>
   );
 }
+
 

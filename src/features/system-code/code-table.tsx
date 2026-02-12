@@ -1,5 +1,8 @@
-"use client";
+﻿"use client";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { SystemCode } from "@/features/system-code/types";
 
 type CodeTableProps = {
@@ -24,64 +27,72 @@ export const CodeTable = ({
   const allSelected = rows.length > 0 && rows.every((row) => selectedKeys.has(uniqueKey(row)));
 
   return (
-    <div className="table-wrap">
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+            <TableHead>
               <input
                 type="checkbox"
                 checked={allSelected}
                 onChange={(event) => onToggleAll(event.target.checked)}
               />
-            </th>
-            <th>Group</th>
-            <th>Code</th>
-            <th>Name</th>
-            <th>Eng Name</th>
-            <th>Seq</th>
-            <th>Use</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+            </TableHead>
+            <TableHead>그룹</TableHead>
+            <TableHead>코드</TableHead>
+            <TableHead>이름</TableHead>
+            <TableHead>영문명</TableHead>
+            <TableHead>순번</TableHead>
+            <TableHead>사용</TableHead>
+            <TableHead>작업</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {rows.length === 0 ? (
-            <tr>
-              <td colSpan={8} className="empty-row">
-                No code data found.
-              </td>
-            </tr>
+            <TableRow>
+              <TableCell colSpan={8} className="py-8 text-center text-slate-500">
+                조회된 코드 데이터가 없습니다.
+              </TableCell>
+            </TableRow>
           ) : (
             rows.map((row) => {
               const key = uniqueKey(row);
               return (
-                <tr key={key}>
-                  <td>
+                <TableRow key={key}>
+                  <TableCell>
                     <input
                       type="checkbox"
                       checked={selectedKeys.has(key)}
                       onChange={(event) => onToggleOne(key, event.target.checked)}
                     />
-                  </td>
-                  <td>{row.grcodeCd}</td>
-                  <td>{row.code}</td>
-                  <td>{row.codeNm}</td>
-                  <td>{row.codeEngNm ?? "-"}</td>
-                  <td>{row.seq ?? "-"}</td>
-                  <td>
-                    <span className={row.useYn === "Y" ? "badge green" : "badge red"}>{row.useYn}</span>
-                  </td>
-                  <td className="row-actions">
-                    <button type="button" className="ghost" onClick={() => onEdit(row)}>수정</button>
-                    <button type="button" className="danger" onClick={() => onDelete(row)}>삭제</button>
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell>{row.grcodeCd}</TableCell>
+                  <TableCell>{row.code}</TableCell>
+                  <TableCell>{row.codeNm}</TableCell>
+                  <TableCell>{row.codeEngNm ?? "-"}</TableCell>
+                  <TableCell>{row.seq ?? "-"}</TableCell>
+                  <TableCell>
+                    <Badge variant={row.useYn === "Y" ? "success" : "destructive"}>{row.useYn}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" onClick={() => onEdit(row)}>
+                        수정
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => onDelete(row)}>
+                        삭제
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               );
             })
           )}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 };
+
+
 
